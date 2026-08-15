@@ -720,7 +720,7 @@ struct ContentView: View {
                         Text("FlashPort")
                             .font(.system(size: 17, weight: .semibold))
 
-                        Text("Version \(appVersionText)")
+                        Text("Version \(appVersionText) — BETA")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
@@ -2196,7 +2196,7 @@ struct ContentView: View {
         case let (.none, .some(build)):
             return build
         case (.none, .none):
-            return "1.0"
+            return "1.0.0"
         }
     }
 
@@ -2206,7 +2206,9 @@ struct ContentView: View {
 
     private var appHistoryEntries: [String] {
         [
-            "Version 1.0 : import ZIP ou dossier firmware Samsung.",
+            "Version 1.0.0 bêta : import ZIP ou dossier firmware Samsung.",
+            "Moteur Odin natif Swift : flash des images de plus de 4 Go (super).",
+            "Conservation des données : respect de la download-list Odin (HOME_CSC).",
             "Mapping automatique des images BL/AP/CP/CSC vers les partitions.",
             "Lecture PIT automatique quand le mode de flash en a besoin.",
             "Blocage si le modèle firmware officiel ne correspond pas au modèle attendu.",
