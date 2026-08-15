@@ -10,9 +10,9 @@ enum FlashBackend: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .heimdall:
-            return "Rapide (Heimdall)"
+            return "Heimdall (externe)"
         case .nativeSwift:
-            return "Compatible (Swift lent)"
+            return "Natif (Swift)"
         }
     }
 }
@@ -74,7 +74,7 @@ final class FlashViewModel {
     var realFlashConfirmation = ""
     var rebootAfterFlash = true
     var nandEraseBeforeFlash = false
-    var flashBackend: FlashBackend = .heimdall
+    var flashBackend: FlashBackend = .nativeSwift
     var expectedDeviceModelCode = ""
     var currentBootloaderRevision = ""
     var detectedDeviceModelCode: String?
@@ -184,20 +184,20 @@ final class FlashViewModel {
             return nil
         }
         if flashBackend == .heimdall {
-            return "Le mode rapide est indisponible. Installe Heimdall/libusb ou passe en mode Compatible Swift dans les paramètres avancés."
+            return "Heimdall est introuvable. Installe Heimdall/libusb ou repasse sur le moteur Natif (Swift) dans les paramètres avancés."
         }
-        return "Le mode compatible Swift est actif. Installe Heimdall/libusb pour récupérer le mode rapide."
+        return nil
     }
 
     var flashBackendStatusText: String {
         switch flashBackend {
         case .heimdall:
             if let executableURL = heimdallExecutableURL {
-                return "Mode rapide actif : \(executableURL.path). La table de partitions peut être lue automatiquement."
+                return "Backend Heimdall externe : \(executableURL.path). La table de partitions peut être lue automatiquement."
             }
-            return "Mode rapide indisponible : installe Heimdall, ou choisis le mode compatible Swift."
+            return "Heimdall introuvable : installe-le, ou choisis le moteur Natif (Swift)."
         case .nativeSwift:
-            return "Mode compatible lent : utilise le port série USB exposé par macOS."
+            return "Moteur natif Swift : USB bulk rapide quand macOS l'autorise, port série USB en secours."
         }
     }
 
@@ -270,7 +270,7 @@ final class FlashViewModel {
                 if flashBackend == .heimdall {
                     warnings.append("userdata : le flash réel basculera en Swift natif pour garder une seule session Odin.")
                 } else {
-                    warnings.append("userdata : transfert volumineux ; le backend Swift série peut être lent.")
+                    warnings.append("userdata : transfert volumineux ; l'envoi peut prendre du temps.")
                 }
             } else {
                 warnings.append("userdata : sélection incompatible avec le mode Sans effacement.")
@@ -644,8 +644,8 @@ final class FlashViewModel {
     func selectUserdataOnlyFirmwareMapping() {
         resetCompletedOperation()
         guard hasLoadedPit else {
-            appendLog("Sélection userdata seul impossible : lire le PIT avant le fallback Swift série.")
-            appendLog("Heimdall bloque souvent sur userdata ; ce mode de secours utilise le transport Swift série.")
+            appendLog("Sélection userdata seul impossible : lire le PIT avant le flash natif.")
+            appendLog("Heimdall bloque souvent sur userdata ; ce mode de secours utilise le moteur natif Swift.")
             return
         }
 
@@ -663,7 +663,7 @@ final class FlashViewModel {
         realFlashConfirmation = ""
         lastPreparationReportSignature = nil
         enforceCustomRecoveryRebootPolicy()
-        appendLog("Sélection userdata seul : 1 image. Backend Swift série actif ; transfert lent mais utile si Recovery est inaccessible.")
+        appendLog("Sélection userdata seul : 1 image. Backend Natif (Swift) actif ; utile si Recovery est inaccessible.")
     }
 
     func clearFirmwareMappingSelection() {
@@ -933,7 +933,7 @@ final class FlashViewModel {
             appendLog("Note : \(warning)")
         }
         if flashBackend == .heimdall && !hasLoadedPit {
-            appendLog("Mode Heimdall : le PIT sera lu par Heimdall pendant le flash rapide.")
+            appendLog("Mode Heimdall : le PIT sera lu par Heimdall pendant le flash.")
         }
         if mappings.contains(where: { $0.entry.fileName.lowercased().hasSuffix(".lz4") }) {
             appendLog("Préparation : le mode LZ4 sera choisi automatiquement selon la réponse Odin du téléphone.")
@@ -967,7 +967,7 @@ final class FlashViewModel {
                 appendLog("Sélection : \(warning)")
             }
             if requiresHeimdallForCurrentFlash && !isHeimdallAvailable {
-                appendLog("Flash rapide bloqué : Heimdall/libusb introuvable. Installe Heimdall ou choisis Compatible Swift dans les paramètres avancés.")
+                appendLog("Flash Heimdall bloqué : Heimdall/libusb introuvable. Installe Heimdall ou choisis Natif (Swift) dans les paramètres avancés.")
             }
             return
         }
@@ -1246,9 +1246,9 @@ final class FlashViewModel {
             let reason = "Heimdall/libusb introuvable"
             completedOperation = nil
             state = .failed(reason)
-            appendLog("Flash rapide indisponible : Heimdall/libusb introuvable.")
+            appendLog("Flash Heimdall indisponible : Heimdall/libusb introuvable.")
             appendLog("Téléchargement Heimdall : https://glassechidna.com.au/heimdall/")
-            appendLog("Installe Heimdall puis relance le flash, ou choisis Swift série dans Paramètres avancés pour utiliser le backend lent.")
+            appendLog("Installe Heimdall puis relance le flash, ou choisis Natif (Swift) dans Paramètres avancés.")
             recordFlashHistory(result: "Échec", detail: reason)
             return
         }
@@ -1257,7 +1257,7 @@ final class FlashViewModel {
         completedOperation = nil
         isReadingPitBeforeFlash = false
         flashRemainingTimeText = nil
-        appendLog("FLASH RAPIDE HEIMDALL DEMARRE : \(mappings.count) images seront envoyees au terminal.")
+        appendLog("FLASH HEIMDALL DEMARRE : \(mappings.count) images seront envoyees au terminal.")
         appendLog("Heimdall : \(heimdallURL.path)")
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self, heimdallURL, mappings, shouldReboot] in
@@ -1312,7 +1312,7 @@ final class FlashViewModel {
                     hasReusableOdinSession = false
                     appendLog("Échec flash Heimdall : \(reason)")
                     appendLog(userFacingFlashFailureSummary(for: reason))
-                    appendLog("Aucun fallback automatique vers Swift série : un flash peut être partiel après un échec Heimdall.")
+                    appendLog("Aucun fallback automatique vers le moteur natif : un flash peut être partiel après un échec Heimdall.")
                     recordFlashHistory(result: "Échec", detail: reason)
                 }
             }
@@ -1497,7 +1497,7 @@ final class FlashViewModel {
             return "Diagnostic : le bootloader a probablement refusé l'image. Vérifie le modèle, le binary et évite tout downgrade."
         }
         if lowercasedReason.contains("heimdall") {
-            return "Diagnostic : le backend rapide a échoué. Exporte le rapport, puis essaie le mode Compatible Swift si le téléphone est encore en Download Mode."
+            return "Diagnostic : le backend Heimdall a échoué. Exporte le rapport, puis essaie le moteur Natif (Swift) si le téléphone est encore en Download Mode."
         }
         return "Diagnostic : le flash a été interrompu avant confirmation complète. Exporte le rapport et vérifie l'état du téléphone avant toute nouvelle tentative."
     }

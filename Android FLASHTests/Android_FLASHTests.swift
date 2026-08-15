@@ -444,6 +444,7 @@ struct Android_FLASHTests {
             partition: makePitEntry(partitionName: "userdata", flashFilename: "userdata.img")
         )
         let viewModel = FlashViewModel()
+        viewModel.flashBackend = .heimdall
         viewModel.firmwareMappings = [bootMapping, userdataMapping]
         viewModel.firmwareDataMode = .erase
 
@@ -466,7 +467,7 @@ struct Android_FLASHTests {
 
         #expect(viewModel.selectedFirmwareMappingIDs == [bootMapping.id, userdataMapping.id])
         #expect(viewModel.logLines.contains { $0.contains("userdata inclus") })
-        #expect(viewModel.selectionWarnings.contains { $0.contains("Swift série peut être lent") })
+        #expect(viewModel.selectionWarnings.contains { $0.contains("l'envoi peut prendre du temps") })
     }
 
     @MainActor
@@ -480,6 +481,7 @@ struct Android_FLASHTests {
             ]
         )
         let viewModel = FlashViewModel()
+        viewModel.flashBackend = .heimdall
         viewModel.firmwareArchives = [archive]
         viewModel.pitEntries = [
             makePitEntry(partitionName: "boot", flashFilename: "boot.img"),
@@ -492,7 +494,7 @@ struct Android_FLASHTests {
         #expect(viewModel.flashBackend == .nativeSwift)
         #expect(viewModel.selectedFirmwareMappings.count == 1)
         #expect(selectedMapping.partition.partitionName == "userdata")
-        #expect(viewModel.logLines.contains { $0.contains("Backend Swift série actif") })
+        #expect(viewModel.logLines.contains { $0.contains("Backend Natif (Swift) actif") })
     }
 
     @Test func buildsHeimdallFlashCommandForLargeSuperPartition() {

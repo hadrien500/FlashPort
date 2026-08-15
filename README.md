@@ -28,7 +28,7 @@ Flasher un firmware peut endommager définitivement un téléphone si le firmwar
 
 - macOS 14.6 ou plus récent.
 - Xcode 16+ pour compiler.
-- Optionnel : [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) pour le backend rapide.
+- Optionnel : [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) pour le backend Heimdall optionnel (secours).
 
 ## Utilisation
 
@@ -45,7 +45,7 @@ Flasher un firmware peut endommager définitivement un téléphone si le firmwar
 
 | Backend | Notes |
 |---|---|
-| Moteur Swift natif | Validé de bout en bout sur matériel réel (Galaxy A13 SM-A137F, MediaTek). Tailles 64 bits, délais de finalisation étendus après les grosses images, flash en session unique. Utilise le transfert USB bulk (IOUSBHost) quand macOS l'autorise, repli port série sinon (lent). |
+| Moteur Swift natif (par défaut) | Validé de bout en bout sur matériel réel (Galaxy A13 SM-A137F, MediaTek). Tailles 64 bits, délais de finalisation étendus après les grosses images, flash en session unique. Utilise le transfert USB bulk (IOUSBHost) quand macOS l'autorise, repli port série sinon (lent). |
 | Heimdall 1.4.2 | Rapide, mais **tronque les fichiers de plus de 4 Go** et les sessions `--resume` enchaînées sont peu fiables sur les bootloaders récents. FlashPort bascule automatiquement sur le moteur natif quand c'est nécessaire. |
 
 Heimdall n'est **pas** fourni. FlashPort le cherche dans le bundle de l'app, le `$PATH`, les emplacements Homebrew/MacPorts et les installations Heimdall Suite.
@@ -84,7 +84,7 @@ Flashing firmware can permanently damage a device if the firmware, model, or reg
 
 - macOS 14.6 or later.
 - Xcode 16+ to build.
-- Optional: [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) for the fast backend.
+- Optional: [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) for the optional Heimdall fallback backend.
 
 ### Basic workflow
 
@@ -99,7 +99,7 @@ Flashing firmware can permanently damage a device if the firmware, model, or reg
 
 | Backend | Notes |
 |---|---|
-| Native Swift engine | Validated end-to-end on real hardware (Galaxy A13 SM-A137F, MediaTek). 64-bit file sizes, long finalization timeouts after large images, single-session flashing. Uses IOUSBHost bulk transfer when macOS allows it, serial fallback otherwise (slow). |
+| Native Swift engine (default) | Validated end-to-end on real hardware (Galaxy A13 SM-A137F, MediaTek). 64-bit file sizes, long finalization timeouts after large images, single-session flashing. Uses IOUSBHost bulk transfer when macOS allows it, serial fallback otherwise (slow). |
 | Heimdall 1.4.2 | Fast, but **truncates files larger than 4 GB** and chained `--resume` sessions are unreliable on recent bootloaders. FlashPort automatically switches to the native engine when needed. |
 
 Heimdall is **not** bundled. FlashPort looks for it in the app bundle, `$PATH`, Homebrew/MacPorts locations, and Heimdall Suite installs.

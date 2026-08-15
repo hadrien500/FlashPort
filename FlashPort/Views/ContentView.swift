@@ -1206,7 +1206,7 @@ struct ContentView: View {
                 advancedSection(
                     "Méthode de flash",
                     systemImage: "bolt.horizontal",
-                    subtitle: "Choisis entre le mode rapide et le mode compatible."
+                    subtitle: "Choisis entre le moteur natif Swift et Heimdall (externe)."
                 ) {
                     HStack(alignment: .top, spacing: 32) {
                         flashBackendSettings(viewModel: viewModel)
