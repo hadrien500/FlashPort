@@ -61,7 +61,7 @@ struct ContentView: View {
         }
         .sheet(isPresented: $showsAppInfo) {
             appInfoSheet
-                .frame(width: 520, height: 500)
+                .frame(width: 560, height: 640)
         }
         .sheet(isPresented: $showsFirmwareInfo) {
             firmwareInfoSheet(viewModel: viewModel)
@@ -704,56 +704,57 @@ struct ContentView: View {
 
             Divider()
 
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 8)
-                            .fill(Color(red: 0.08, green: 0.62, blue: 0.76))
-                            .frame(width: 42, height: 42)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(spacing: 12) {
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(red: 0.08, green: 0.62, blue: 0.76))
+                                .frame(width: 42, height: 42)
 
-                        Image(systemName: "iphone")
-                            .font(.system(size: 22, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
+                            Image(systemName: "iphone")
+                                .font(.system(size: 22, weight: .semibold))
+                                .foregroundStyle(.white)
+                        }
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("FlashPort")
-                            .font(.system(size: 17, weight: .semibold))
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("FlashPort")
+                                .font(.system(size: 17, weight: .semibold))
 
-                        Text("Version \(appVersionText) — BETA")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                Text(appDescriptionText)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("Historique")
-                        .font(.headline)
-
-                    ForEach(appHistoryEntries, id: \.self) { entry in
-                        HStack(alignment: .top, spacing: 8) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
-                                .padding(.top, 2)
-
-                            Text(entry)
-                                .font(.callout)
-                                .foregroundStyle(.primary)
+                            Text("Version \(appVersionText) — BETA")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
                         }
                     }
+
+                    Text(appDescriptionText)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Historique")
+                            .font(.headline)
+
+                        ForEach(appHistoryEntries, id: \.self) { entry in
+                            HStack(alignment: .top, spacing: 8) {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 12, weight: .bold))
+                                    .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
+                                    .padding(.top, 2)
+
+                                Text(entry)
+                                    .font(.callout)
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                    }
+
+                    flashHistorySection(viewModel: viewModel)
                 }
-
-                flashHistorySection(viewModel: viewModel)
-
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(18)
             }
-            .padding(18)
         }
     }
 
