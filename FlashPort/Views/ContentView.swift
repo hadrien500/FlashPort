@@ -87,12 +87,21 @@ struct ContentView: View {
                         .foregroundStyle(.white)
                 }
 
-                Text("Flash")
-                    .font(.system(size: 24, weight: .semibold))
+                HStack(spacing: 0) {
+                    Text("Flash")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(.white)
+                    Text("Port")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
+                }
+
+                Text("BETA")
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(.white)
-                Text("Port")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(Color.orange.opacity(0.85)))
             }
 
             Spacer()
