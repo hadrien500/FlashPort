@@ -2239,7 +2239,10 @@ struct ContentView: View {
 
     private var appHistoryEntries: [String] {
         [
-            "Version 1.0.0 bêta : import ZIP ou dossier firmware Samsung.",
+            "Bêta 2 : moteur natif Swift par défaut, vérification MD5 des archives à l'import.",
+            "Bêta 2 : glisser-déposer du firmware, notification de fin de flash, anti-veille pendant le flash.",
+            "Bêta 2 : réglages mémorisés entre les lancements.",
+            "Bêta 1 : import ZIP ou dossier firmware Samsung.",
             "Moteur Odin natif Swift : flash des images de plus de 4 Go (super).",
             "Conservation des données : respect de la download-list Odin (HOME_CSC).",
             "Mapping automatique des images BL/AP/CP/CSC vers les partitions.",

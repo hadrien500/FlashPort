@@ -56,6 +56,10 @@ Heimdall n'est **pas** fourni. FlashPort le cherche dans le bundle de l'app, le 
 
 Ouvrez `FlashPort.xcodeproj` et compilez le schéma `FlashPort`. Les tests unitaires couvrent le parsing/sérialisation PIT, la structure des paquets Odin, la lecture TAR/`.tar.md5` (y compris les tailles GNU base-256), le décodage LZ4, le mapping firmware↔PIT, le filtrage download-list et la génération des commandes Heimdall.
 
+## Changelog
+
+L'historique des versions est détaillé dans le [CHANGELOG](CHANGELOG.md).
+
 ## Licence
 
 [MIT](LICENSE). L'implémentation du protocole Odin s'appuie sur le protocole documenté par le projet open source [Heimdall](https://github.com/Benjamin-Dobell/Heimdall) (MIT).
