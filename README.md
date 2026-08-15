@@ -1,5 +1,7 @@
 # FlashPort
 
+![CI](https://github.com/hadrien500/FlashPort/actions/workflows/ci.yml/badge.svg)
+
 **Application macOS native pour flasher des firmwares Samsung en mode Download — une alternative à Odin pour Mac.**
 
 FlashPort importe les packages firmware Samsung officiels (ZIP ou dossier extrait), associe les images BL/AP/CP/CSC à la table de partitions PIT du téléphone, et les flashe par USB — avec conservation des données, exactement comme le mode HOME_CSC d'Odin.

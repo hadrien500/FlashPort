@@ -1,5 +1,7 @@
+import AppKit
 import Foundation
 import Observation
+import UserNotifications
 
 enum FlashBackend: String, CaseIterable, Identifiable {
     case heimdall
@@ -52,6 +54,9 @@ final class FlashViewModel {
     private static let maximumLogLineCount = 4_000
     private static let flashHistoryDefaultsKey = "FlashPort.flashHistoryEntries"
     private static let maximumFlashHistoryCount = 30
+    private static let flashBackendDefaultsKey = "FlashPort.flashBackend"
+    private static let rebootAfterFlashDefaultsKey = "FlashPort.rebootAfterFlash"
+    private static let firmwareDataModeDefaultsKey = "FlashPort.firmwareDataMode"
 
     var jobs: [FlashJob] = StandardPartition.allCases.map {
         FlashJob(partitionName: $0.rawValue, fileURL: nil)
@@ -114,8 +119,12 @@ final class FlashViewModel {
     @ObservationIgnored
     private var automaticDeviceMissCount = 0
 
+    @ObservationIgnored
+    private var flashActivityToken: NSObjectProtocol?
+
     init() {
         loadFlashHistory()
+        loadPersistedSettings()
         cleanupStaleTemporaryFiles()
     }
 
@@ -434,11 +443,25 @@ final class FlashViewModel {
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
+                let hasValidMd5 = try FirmwareMd5Verifier.verify(url: url) { progress in
+                    DispatchQueue.main.async { [weak self] in
+                        self?.firmwareImportProgress = FirmwareImportProgress(
+                            message: "Vérification MD5 \(slot.rawValue)",
+                            progress: progress * 0.5
+                        )
+                    }
+                }
+                if hasValidMd5 {
+                    DispatchQueue.main.async { [weak self] in
+                        self?.appendLog("\(slot.rawValue) : somme MD5 valide.")
+                    }
+                }
+
                 let archive = try SamsungFirmwareArchiveReader.readArchive(url: url, slot: slot) { progress in
                     DispatchQueue.main.async { [weak self] in
                         self?.firmwareImportProgress = FirmwareImportProgress(
                             message: "Analyse \(slot.rawValue)",
-                            progress: progress
+                            progress: 0.5 + progress * 0.5
                         )
                     }
                 }
@@ -509,6 +532,7 @@ final class FlashViewModel {
         firmwareDataMode = mode
         applyActiveFirmwareArchives(autoSelect: true)
         appendLog("Mode données utilisateur : \(mode.title).")
+        persistSettings()
         if let preserveDataModeWarningText {
             appendLog(preserveDataModeWarningText)
         }
@@ -536,6 +560,7 @@ final class FlashViewModel {
         realFlashConfirmation = ""
         lastPreparationReportSignature = nil
         appendLog(enabled ? "Redémarrage après flash activé." : "Redémarrage après flash désactivé.")
+        persistSettings()
     }
 
     func setFlashBackend(_ backend: FlashBackend) {
@@ -547,6 +572,7 @@ final class FlashViewModel {
             selectRecommendedFirmwareMappings()
         }
         appendLog("Backend flash : \(backend.title).")
+        persistSettings()
     }
 
     func setExpectedDeviceModelCode(_ modelCode: String) {
@@ -1062,6 +1088,8 @@ final class FlashViewModel {
         isReadingPitBeforeFlash = false
         flashRemainingTimeText = nil
         appendLog("FLASH REEL DEMARRE : \(mappings.count) images seront envoyees au terminal.")
+        beginFlashActivity()
+        requestFlashNotificationAuthorization()
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self, flashSession, device, mappings, shouldReboot, shouldEraseNAND, useReusableSession, preserveCompressedLZ4, isCustomRecoveryFlash, shouldKeepSessionOpenAfterFlash] in
             var shouldCloseDevice = true
@@ -1217,7 +1245,9 @@ final class FlashViewModel {
                             appendLog("TWRP : quitte Download manuellement puis maintiens immédiatement Volume Haut + Power. Si Android Recovery apparaît, reflashe TWRP sans laisser Android démarrer.")
                         }
                     }
-                    recordFlashHistory(result: "Succès", detail: "Flash Swift terminé.")
+                    endFlashActivity()
+                    postFlashCompletionNotification(success: true, detail: "Le firmware a été envoyé au téléphone avec succès.")
+                    recordFlashHistory(result: "Succès", detail: "Flash Swift terminé.", engineName: FlashBackend.nativeSwift.title)
                 }
             } catch {
                 let reason = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
@@ -1235,7 +1265,9 @@ final class FlashViewModel {
                     if !useReusableSession {
                         appendLog("Si le handshake échoue après une lecture PIT précédente, remets le téléphone en mode Download puis relis le PIT avant de flasher.")
                     }
-                    recordFlashHistory(result: "Échec", detail: reason)
+                    endFlashActivity()
+                    postFlashCompletionNotification(success: false, detail: reason)
+                    recordFlashHistory(result: "Échec", detail: reason, engineName: FlashBackend.nativeSwift.title)
                 }
             }
         }
@@ -1259,6 +1291,8 @@ final class FlashViewModel {
         flashRemainingTimeText = nil
         appendLog("FLASH HEIMDALL DEMARRE : \(mappings.count) images seront envoyees au terminal.")
         appendLog("Heimdall : \(heimdallURL.path)")
+        beginFlashActivity()
+        requestFlashNotificationAuthorization()
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self, heimdallURL, mappings, shouldReboot] in
             let appendProgress: (String) -> Void = { [weak self] line in
@@ -1298,7 +1332,9 @@ final class FlashViewModel {
                     session = nil
                     hasReusableOdinSession = false
                     appendLog("Flash Heimdall terminé.")
-                    recordFlashHistory(result: "Succès", detail: "Flash Heimdall terminé.")
+                    endFlashActivity()
+                    postFlashCompletionNotification(success: true, detail: "Le firmware a été envoyé au téléphone avec succès.")
+                    recordFlashHistory(result: "Succès", detail: "Flash Heimdall terminé.", engineName: FlashBackend.heimdall.title)
                 }
             } catch {
                 let reason = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
@@ -1313,7 +1349,9 @@ final class FlashViewModel {
                     appendLog("Échec flash Heimdall : \(reason)")
                     appendLog(userFacingFlashFailureSummary(for: reason))
                     appendLog("Aucun fallback automatique vers le moteur natif : un flash peut être partiel après un échec Heimdall.")
-                    recordFlashHistory(result: "Échec", detail: reason)
+                    endFlashActivity()
+                    postFlashCompletionNotification(success: false, detail: reason)
+                    recordFlashHistory(result: "Échec", detail: reason, engineName: FlashBackend.heimdall.title)
                 }
             }
         }
@@ -1413,14 +1451,14 @@ final class FlashViewModel {
         return lines.joined(separator: "\n")
     }
 
-    private func recordFlashHistory(result: String, detail: String) {
+    private func recordFlashHistory(result: String, detail: String, engineName: String? = nil) {
         let entry = FlashHistoryEntry(
             id: UUID().uuidString,
             date: Date(),
             result: result,
             firmwareName: importedFirmwareSourceName ?? firmwareArchives.map(\.displayName).joined(separator: ", "),
             deviceName: connectedDeviceDescription ?? detectedDeviceModelCode ?? "Téléphone non identifié",
-            backendName: flashBackend.title,
+            backendName: engineName ?? flashBackend.title,
             selectedImageCount: selectedFirmwareMappings.count,
             selectedSize: selectedFlashSize,
             dataModeTitle: firmwareDataMode.title,
@@ -1431,6 +1469,63 @@ final class FlashViewModel {
             flashHistoryEntries.removeLast(flashHistoryEntries.count - Self.maximumFlashHistoryCount)
         }
         saveFlashHistory()
+    }
+
+    private func loadPersistedSettings() {
+        let defaults = UserDefaults.standard
+        if let backendValue = defaults.string(forKey: Self.flashBackendDefaultsKey),
+           let backend = FlashBackend(rawValue: backendValue) {
+            flashBackend = backend
+        }
+        if defaults.object(forKey: Self.rebootAfterFlashDefaultsKey) != nil {
+            rebootAfterFlash = defaults.bool(forKey: Self.rebootAfterFlashDefaultsKey)
+        }
+        if let dataModeValue = defaults.string(forKey: Self.firmwareDataModeDefaultsKey),
+           let dataMode = FirmwareDataMode(rawValue: dataModeValue) {
+            firmwareDataMode = dataMode
+        }
+    }
+
+    private func persistSettings() {
+        let defaults = UserDefaults.standard
+        defaults.set(flashBackend.rawValue, forKey: Self.flashBackendDefaultsKey)
+        defaults.set(rebootAfterFlash, forKey: Self.rebootAfterFlashDefaultsKey)
+        defaults.set(firmwareDataMode.rawValue, forKey: Self.firmwareDataModeDefaultsKey)
+    }
+
+    /// Empêche la mise en veille du Mac pendant un flash : une coupure USB en
+    /// plein transfert interromprait le flash.
+    private func beginFlashActivity() {
+        endFlashActivity()
+        flashActivityToken = ProcessInfo.processInfo.beginActivity(
+            options: [.userInitiated, .idleSystemSleepDisabled],
+            reason: "Flash firmware Samsung en cours"
+        )
+    }
+
+    private func endFlashActivity() {
+        if let flashActivityToken {
+            ProcessInfo.processInfo.endActivity(flashActivityToken)
+        }
+        flashActivityToken = nil
+    }
+
+    private func requestFlashNotificationAuthorization() {
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
+    /// Notification locale de fin de flash, uniquement si l'app est en
+    /// arrière-plan (un flash dure plusieurs minutes).
+    private func postFlashCompletionNotification(success: Bool, detail: String) {
+        guard !NSApplication.shared.isActive else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = success ? "Flash terminé" : "Échec du flash"
+        content.body = detail
+        content.sound = .default
+        UNUserNotificationCenter.current().add(
+            UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        )
     }
 
     private func loadFlashHistory() {

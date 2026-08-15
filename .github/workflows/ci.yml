@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build and run unit tests
+        run: |
+          xcodebuild \
+            -project FlashPort.xcodeproj \
+            -scheme FlashPort \
+            -destination 'platform=macOS' \
+            -only-testing:FlashPortTests \
+            CODE_SIGNING_ALLOWED=NO \
+            test

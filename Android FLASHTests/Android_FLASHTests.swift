@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import Testing
 @testable import FlashPort
@@ -210,6 +211,54 @@ struct Android_FLASHTests {
         let archive = try SamsungFirmwareArchiveReader.readArchive(url: url, slot: .ap)
 
         #expect(archive.downloadListImageNames == nil)
+    }
+
+    private func makeRawTarData() -> Data {
+        var data = Data()
+        data.append(makeTarHeader(name: "boot.img.lz4", size: 4))
+        data.append(Data(repeating: 0x11, count: 4))
+        data.append(Data(repeating: 0, count: 508))
+        data.append(Data(repeating: 0, count: 1024))
+        return data
+    }
+
+    private func writeTemporaryTarMd5(_ data: Data) throws -> URL {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlashPortTest-\(UUID().uuidString).tar.md5")
+        try data.write(to: url)
+        return url
+    }
+
+    @Test func verifiesTarMd5Trailer() throws {
+        var content = makeRawTarData()
+        let digest = Insecure.MD5.hash(data: content).map { String(format: "%02x", $0) }.joined()
+        content.append(Data("\(digest)  AP_test.tar\n".utf8))
+
+        let md5URL = try writeTemporaryTarMd5(content)
+        defer { try? FileManager.default.removeItem(at: md5URL) }
+
+        #expect(try FirmwareMd5Verifier.verify(url: md5URL) == true)
+    }
+
+    @Test func rejectsCorruptedTarMd5() throws {
+        var content = makeRawTarData()
+        let digest = Insecure.MD5.hash(data: content).map { String(format: "%02x", $0) }.joined()
+        content[600] ^= 0xFF
+        content.append(Data("\(digest)  AP_test.tar\n".utf8))
+
+        let md5URL = try writeTemporaryTarMd5(content)
+        defer { try? FileManager.default.removeItem(at: md5URL) }
+
+        #expect(throws: FirmwareMd5Error.self) {
+            try FirmwareMd5Verifier.verify(url: md5URL)
+        }
+    }
+
+    @Test func skipsMd5VerificationWithoutTrailer() throws {
+        let md5URL = try writeTemporaryTarMd5(makeRawTarData())
+        defer { try? FileManager.default.removeItem(at: md5URL) }
+
+        #expect(try FirmwareMd5Verifier.verify(url: md5URL) == false)
     }
 
     @MainActor

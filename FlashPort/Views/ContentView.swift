@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @State private var viewModel = FlashViewModel()
@@ -11,6 +12,7 @@ struct ContentView: View {
     @State private var showsFirmwareDetails = true
     @State private var showsManualFirmwareChecks = false
     @State private var interfaceMode: InterfaceMode = .guided
+    @State private var isFirmwareDropTargeted = false
 
     private var activeStepColor: Color {
         Color(red: 0.28, green: 0.82, blue: 0.94)
@@ -53,6 +55,20 @@ struct ContentView: View {
                 .padding(.horizontal, 72)
                 .padding(.bottom, 36)
             }
+
+            if isFirmwareDropTargeted {
+                RoundedRectangle(cornerRadius: 18)
+                    .strokeBorder(Color(red: 0.28, green: 0.82, blue: 0.94), lineWidth: 3)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18)
+                            .fill(Color(red: 0.28, green: 0.82, blue: 0.94).opacity(0.08))
+                    )
+                    .padding(10)
+                    .allowsHitTesting(false)
+            }
+        }
+        .onDrop(of: [.fileURL], isTargeted: $isFirmwareDropTargeted) { providers in
+            handleFirmwareDrop(providers, viewModel: viewModel)
         }
         .frame(minWidth: 980, minHeight: 650)
         .sheet(isPresented: $showsAdvancedSettings) {
@@ -2140,6 +2156,22 @@ struct ContentView: View {
             return .green
         }
         return .secondary
+    }
+
+    private func handleFirmwareDrop(_ providers: [NSItemProvider], viewModel: FlashViewModel) -> Bool {
+        guard !viewModel.isImportingFirmware,
+              let provider = providers.first(where: { $0.canLoadObject(ofClass: URL.self) }) else {
+            return false
+        }
+
+        _ = provider.loadObject(ofClass: URL.self) { url, _ in
+            guard let url else { return }
+            DispatchQueue.main.async {
+                guard !viewModel.isImportingFirmware else { return }
+                viewModel.importFirmwareBundle(url)
+            }
+        }
+        return true
     }
 
     private func selectFirmwareBundle() {

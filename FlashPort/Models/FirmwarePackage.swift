@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 
 /// Emplacements standards des archives firmware Samsung sélectionnées par l'utilisateur.
@@ -537,6 +538,116 @@ enum FirmwareArchiveError: Error, LocalizedError, Equatable {
     }
 }
 
+enum FirmwareMd5Error: Error, LocalizedError, Equatable {
+    case mismatch(fileName: String)
+
+    var errorDescription: String? {
+        switch self {
+        case .mismatch(let fileName):
+            return "\(fileName) : somme MD5 invalide, l'archive est corrompue ou incomplète. Retélécharge le firmware."
+        }
+    }
+}
+
+/// Vérifie le trailer MD5 des archives .tar.md5 Samsung : le fichier se
+/// termine par une ligne ASCII "<md5>  <nom>" calculée sur tout ce qui précède
+/// cette ligne.
+enum FirmwareMd5Verifier {
+    /// Retourne true si un trailer MD5 a été trouvé et vérifié, false si le
+    /// fichier n'en contient pas. Lève FirmwareMd5Error.mismatch si la somme
+    /// ne correspond pas.
+    @discardableResult
+    static func verify(url: URL, progressHandler: ((Double) -> Void)? = nil) throws -> Bool {
+        guard url.lastPathComponent.lowercased().hasSuffix(".tar.md5") else { return false }
+
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+
+        let fileSize = try handle.seekToEnd()
+        guard fileSize > 0 else { return false }
+
+        let tailLength = UInt64(min(1024, fileSize))
+        try handle.seek(toOffset: fileSize - tailLength)
+        let tail = handle.readData(ofLength: Int(tailLength))
+
+        guard let trailer = parseTrailer(in: tail) else {
+            return false
+        }
+
+        let contentLength = fileSize - tailLength + UInt64(trailer.offsetInTail)
+        try handle.seek(toOffset: 0)
+
+        var hasher = Insecure.MD5()
+        var remainingBytes = contentLength
+        var processedBytes: UInt64 = 0
+        let chunkSize: UInt64 = 8 * 1024 * 1024
+
+        while remainingBytes > 0 {
+            let count = Int(min(chunkSize, remainingBytes))
+            let chunk = handle.readData(ofLength: count)
+            guard chunk.count == count else {
+                throw FirmwareMd5Error.mismatch(fileName: url.lastPathComponent)
+            }
+            hasher.update(data: chunk)
+            remainingBytes -= UInt64(count)
+            processedBytes += UInt64(count)
+            if contentLength > 0 {
+                progressHandler?(Double(processedBytes) / Double(contentLength))
+            }
+        }
+
+        let digest = hasher.finalize().map { String(format: "%02x", $0) }.joined()
+        guard digest == trailer.md5 else {
+            throw FirmwareMd5Error.mismatch(fileName: url.lastPathComponent)
+        }
+        return true
+    }
+
+    /// Le trailer suit les blocs binaires du TAR (souvent après des octets
+    /// nuls, sans saut de ligne) : on cherche la dernière position candidate
+    /// contenant 32 caractères hexadécimaux suivis d'un séparateur, avec
+    /// uniquement de l'ASCII imprimable jusqu'à la fin du fichier.
+    private static func parseTrailer(in tail: Data) -> (md5: String, offsetInTail: Int)? {
+        let bytes = [UInt8](tail)
+        let hexDigits = Set<UInt8>(Array("0123456789abcdefABCDEF".utf8))
+
+        var candidateStarts: [Int] = [0]
+        for index in 1..<bytes.count {
+            let previousByte = bytes[index - 1]
+            if previousByte == 0 || previousByte == UInt8(ascii: "\n") {
+                candidateStarts.append(index)
+            }
+        }
+
+        for start in candidateStarts.sorted(by: >) {
+            guard start + 33 <= bytes.count else { continue }
+
+            let hashBytes = bytes[start..<start + 32]
+            guard hashBytes.allSatisfy({ hexDigits.contains($0) }) else { continue }
+
+            let separator = bytes[start + 32]
+            guard separator == UInt8(ascii: " ") || separator == UInt8(ascii: "\t") else { continue }
+
+            let remainder = bytes[(start + 32)...]
+            let isPrintableTrailer = remainder.allSatisfy { byte in
+                byte == UInt8(ascii: "\n") || byte == UInt8(ascii: "\r") || (byte >= 0x20 && byte < 0x7F)
+            }
+            guard isPrintableTrailer else { continue }
+
+            return (String(decoding: hashBytes, as: UTF8.self).lowercased(), start)
+        }
+
+        return nil
+    }
+}
+
 enum SamsungFirmwareArchiveReader {
     private static let blockSize = 512
 
@@ -798,6 +909,13 @@ enum FirmwareBundleImporter {
                 let itemStartProgress = analysisStartProgress
                     + (Double(index) / Double(archiveCount)) * analysisProgressSpan
                 let itemProgressSpan = analysisProgressSpan / Double(archiveCount)
+
+                importProgressHandler?(
+                    FirmwareImportProgress(message: "Vérification MD5 \(slot.rawValue)", progress: itemStartProgress)
+                )
+                if try FirmwareMd5Verifier.verify(url: archiveURL) {
+                    progressHandler?("\(slot.rawValue) : somme MD5 valide.")
+                }
 
                 progressHandler?("Analyse firmware \(slot.rawValue) : \(archiveURL.lastPathComponent)")
                 importProgressHandler?(
