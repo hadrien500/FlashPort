@@ -4,6 +4,8 @@
 
 FlashPort imports official Samsung firmware packages (ZIP or extracted folder), maps the BL/AP/CP/CSC images against the device's PIT partition table, and flashes them over USB — with data preservation support, exactly like Odin's HOME_CSC workflow.
 
+![FlashPort main interface](docs/screenshot.png)
+
 *Une version française est disponible plus bas : [Version française](#version-française).*
 
 ---
