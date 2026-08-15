@@ -24,15 +24,16 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C7D4D7563029D93E008569F8 /* Android FLASH.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Android FLASH.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C7D4D7633029D940008569F8 /* Android FLASHTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Android FLASHTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		C7D4D76D3029D940008569F8 /* Android FLASHUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Android FLASHUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		C79065103029F008008063E0 /* AndroidFLASH.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = AndroidFLASH.entitlements; sourceTree = "<group>"; };
+		C7D4D7563029D93E008569F8 /* FlashPort.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlashPort.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7D4D7633029D940008569F8 /* FlashPortTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashPortTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C7D4D76D3029D940008569F8 /* FlashPortUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlashPortUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C7D4D7583029D93E008569F8 /* Android FLASH */ = {
+		C7D4D7583029D93E008569F8 /* FlashPort */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Android FLASH";
+			path = FlashPort;
 			sourceTree = "<group>";
 		};
 		C7D4D7663029D940008569F8 /* Android FLASHTests */ = {
@@ -75,19 +76,20 @@
 		C7D4D74D3029D93D008569F8 = {
 			isa = PBXGroup;
 			children = (
-				C7D4D7583029D93E008569F8 /* Android FLASH */,
+				C7D4D7583029D93E008569F8 /* FlashPort */,
 				C7D4D7663029D940008569F8 /* Android FLASHTests */,
 				C7D4D7703029D940008569F8 /* Android FLASHUITests */,
 				C7D4D7573029D93E008569F8 /* Products */,
+				C79065103029F008008063E0 /* AndroidFLASH.entitlements */,
 			);
 			sourceTree = "<group>";
 		};
 		C7D4D7573029D93E008569F8 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C7D4D7563029D93E008569F8 /* Android FLASH.app */,
-				C7D4D7633029D940008569F8 /* Android FLASHTests.xctest */,
-				C7D4D76D3029D940008569F8 /* Android FLASHUITests.xctest */,
+				C7D4D7563029D93E008569F8 /* FlashPort.app */,
+				C7D4D7633029D940008569F8 /* FlashPortTests.xctest */,
+				C7D4D76D3029D940008569F8 /* FlashPortUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +97,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C7D4D7553029D93D008569F8 /* Android FLASH */ = {
+		C7D4D7553029D93D008569F8 /* FlashPort */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C7D4D7773029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASH" */;
+			buildConfigurationList = C7D4D7773029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPort" */;
 			buildPhases = (
 				C7D4D7523029D93D008569F8 /* Sources */,
 				C7D4D7533029D93D008569F8 /* Frameworks */,
@@ -108,18 +110,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C7D4D7583029D93E008569F8 /* Android FLASH */,
+				C7D4D7583029D93E008569F8 /* FlashPort */,
 			);
-			name = "Android FLASH";
+			name = FlashPort;
 			packageProductDependencies = (
 			);
 			productName = "Android FLASH";
-			productReference = C7D4D7563029D93E008569F8 /* Android FLASH.app */;
+			productReference = C7D4D7563029D93E008569F8 /* FlashPort.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C7D4D7623029D940008569F8 /* Android FLASHTests */ = {
+		C7D4D7623029D940008569F8 /* FlashPortTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C7D4D77A3029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASHTests" */;
+			buildConfigurationList = C7D4D77A3029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPortTests" */;
 			buildPhases = (
 				C7D4D75F3029D940008569F8 /* Sources */,
 				C7D4D7603029D940008569F8 /* Frameworks */,
@@ -133,16 +135,16 @@
 			fileSystemSynchronizedGroups = (
 				C7D4D7663029D940008569F8 /* Android FLASHTests */,
 			);
-			name = "Android FLASHTests";
+			name = FlashPortTests;
 			packageProductDependencies = (
 			);
 			productName = "Android FLASHTests";
-			productReference = C7D4D7633029D940008569F8 /* Android FLASHTests.xctest */;
+			productReference = C7D4D7633029D940008569F8 /* FlashPortTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		C7D4D76C3029D940008569F8 /* Android FLASHUITests */ = {
+		C7D4D76C3029D940008569F8 /* FlashPortUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C7D4D77D3029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASHUITests" */;
+			buildConfigurationList = C7D4D77D3029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPortUITests" */;
 			buildPhases = (
 				C7D4D7693029D940008569F8 /* Sources */,
 				C7D4D76A3029D940008569F8 /* Frameworks */,
@@ -156,11 +158,11 @@
 			fileSystemSynchronizedGroups = (
 				C7D4D7703029D940008569F8 /* Android FLASHUITests */,
 			);
-			name = "Android FLASHUITests";
+			name = FlashPortUITests;
 			packageProductDependencies = (
 			);
 			productName = "Android FLASHUITests";
-			productReference = C7D4D76D3029D940008569F8 /* Android FLASHUITests.xctest */;
+			productReference = C7D4D76D3029D940008569F8 /* FlashPortUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +188,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C7D4D7513029D93D008569F8 /* Build configuration list for PBXProject "Android FLASH" */;
+			buildConfigurationList = C7D4D7513029D93D008569F8 /* Build configuration list for PBXProject "FlashPort" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +202,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C7D4D7553029D93D008569F8 /* Android FLASH */,
-				C7D4D7623029D940008569F8 /* Android FLASHTests */,
-				C7D4D76C3029D940008569F8 /* Android FLASHUITests */,
+				C7D4D7553029D93D008569F8 /* FlashPort */,
+				C7D4D7623029D940008569F8 /* FlashPortTests */,
+				C7D4D76C3029D940008569F8 /* FlashPortUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +260,12 @@
 /* Begin PBXTargetDependency section */
 		C7D4D7653029D940008569F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = C7D4D7553029D93D008569F8 /* Android FLASH */;
+			target = C7D4D7553029D93D008569F8 /* FlashPort */;
 			targetProxy = C7D4D7643029D940008569F8 /* PBXContainerItemProxy */;
 		};
 		C7D4D76F3029D940008569F8 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = C7D4D7553029D93D008569F8 /* Android FLASH */;
+			target = C7D4D7553029D93D008569F8 /* FlashPort */;
 			targetProxy = C7D4D76E3029D940008569F8 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -392,20 +394,23 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AndroidFLASH.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				CURRENT_PROJECT_VERSION = 260812;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FlashPort;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "come.perso.Android-FLASH";
+				PRODUCT_BUNDLE_IDENTIFIER = come.mac.FlashPort;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -422,20 +427,23 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = AndroidFLASH.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				CURRENT_PROJECT_VERSION = 260812;
+				ENABLE_APP_SANDBOX = NO;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = FlashPort;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "come.perso.Android-FLASH";
+				PRODUCT_BUNDLE_IDENTIFIER = come.mac.FlashPort;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -463,7 +471,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Android FLASH.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Android FLASH";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlashPort.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlashPort";
 			};
 			name = Debug;
 		};
@@ -483,7 +491,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Android FLASH.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Android FLASH";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlashPort.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlashPort";
 			};
 			name = Release;
 		};
@@ -501,7 +509,7 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "Android FLASH";
+				TEST_TARGET_NAME = FlashPort;
 			};
 			name = Debug;
 		};
@@ -519,14 +527,14 @@
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = "Android FLASH";
+				TEST_TARGET_NAME = FlashPort;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C7D4D7513029D93D008569F8 /* Build configuration list for PBXProject "Android FLASH" */ = {
+		C7D4D7513029D93D008569F8 /* Build configuration list for PBXProject "FlashPort" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7D4D7753029D940008569F8 /* Debug */,
@@ -535,7 +543,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C7D4D7773029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASH" */ = {
+		C7D4D7773029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPort" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7D4D7783029D940008569F8 /* Debug */,
@@ -544,7 +552,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C7D4D77A3029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASHTests" */ = {
+		C7D4D77A3029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPortTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7D4D77B3029D940008569F8 /* Debug */,
@@ -553,7 +561,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C7D4D77D3029D940008569F8 /* Build configuration list for PBXNativeTarget "Android FLASHUITests" */ = {
+		C7D4D77D3029D940008569F8 /* Build configuration list for PBXNativeTarget "FlashPortUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C7D4D77E3029D940008569F8 /* Debug */,

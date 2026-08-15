@@ -1,0 +1,19 @@
+# Xcode
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# macOS
+.DS_Store
+
+# Samsung firmware files — never commit firmware
+*.tar.md5
+*.img
+*.img.lz4
+*.bin.lz4
+*.pit
+SAMFW*.zip
