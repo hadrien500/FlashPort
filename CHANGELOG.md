@@ -3,7 +3,7 @@
 Toutes les évolutions notables de FlashPort sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le projet suit [SemVer](https://semver.org/lang/fr/).
 
-## [Non publié] — prochaine bêta 2
+## [1.0.0-beta.2] — 2026-08-15
 
 ### Ajouté
 - Le moteur natif Swift devient le backend par défaut (Heimdall passe en option de secours « Heimdall (externe) »).
