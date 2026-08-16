@@ -7,6 +7,7 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le
 
 ### Ajouté
 - Flash direct d'un recovery personnalisé (TWRP) : bouton « Flasher un recovery… » dans les paramètres avancés, qui accepte un fichier .img, .img.lz4, .tar ou .tar.md5 et le mappe automatiquement sur la partition recovery (limite 256 Mo, redémarrage automatique désactivé).
+- Détection du refus de binaire par le bootloader : si le téléphone rejette une image (ex. TWRP non signé sur bootloader verrouillé), le flash échoue désormais explicitement avec le code d'erreur et la marche à suivre (déverrouillage OEM), au lieu d'annoncer un faux succès.
 
 ## [1.0.0-beta.3] — 2026-08-16
 

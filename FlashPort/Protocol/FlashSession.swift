@@ -22,6 +22,7 @@ enum OdinProtocolError: Error, LocalizedError {
     case incompletePitPart(index: Int, expected: Int, actual: Int)
     case fileTooLarge(context: String, size: UInt64)
     case incompleteFirmwarePart(context: String, expected: Int, actual: Int)
+    case binaryRejected(context: String, code: UInt32)
 
     var errorDescription: String? {
         switch self {
@@ -44,6 +45,8 @@ enum OdinProtocolError: Error, LocalizedError {
             return "\(context) : fichier trop grand pour ce paquet Odin 32 bits (\(size) octets)."
         case .incompleteFirmwarePart(let context, let expected, let actual):
             return "\(context) : bloc firmware incomplet (\(actual)/\(expected) octets lus)."
+        case .binaryRejected(let context, let code):
+            return "\(context) : le bootloader a refusé le binaire (code 0x\(String(code, radix: 16, uppercase: true))). Binaire non officiel sur bootloader verrouillé ? Un recovery custom (TWRP) exige le déverrouillage OEM du bootloader."
         }
     }
 }
@@ -691,13 +694,20 @@ final class FlashSession {
             payload: payload
         )
         try sendPacket(packet.serialize(), emptyTransferBefore: true, emptyTransferAfter: true)
-        _ = try receiveResponse(
+        let responseValue = try receiveResponse(
             expectedType: .fileTransfer,
             context: "Fin séquence \(context)",
             timeout: isLastSequence
                 ? max(fileTransferSequenceTimeout, OdinProtocol.finalSequenceTimeout)
                 : fileTransferSequenceTimeout
         )
+
+        // Convention Odin : 0 = accepté. Un code non nul ici signale un refus
+        // du binaire par le bootloader (ex. image non signée Samsung sur
+        // bootloader verrouillé), que les données aient été transférées ou non.
+        guard responseValue == 0 else {
+            throw OdinProtocolError.binaryRejected(context: context, code: responseValue)
+        }
     }
 
     private func readFirmwarePacket(

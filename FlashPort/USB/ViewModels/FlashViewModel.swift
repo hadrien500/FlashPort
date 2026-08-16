@@ -1634,6 +1634,9 @@ final class FlashViewModel {
             || lowercasedReason.contains("transport") {
             return "Diagnostic : le lien USB a coupé ou le téléphone a refusé une écriture. Débranche/rebranche, remets le téléphone en Download Mode, puis réessaie avec le câble le plus direct possible."
         }
+        if lowercasedReason.contains("refusé le binaire") {
+            return "Diagnostic : le téléphone n'accepte que des binaires officiels Samsung. Pour flasher un recovery custom (TWRP), active « Déverrouillage OEM » dans les Options de développement, puis déverrouille le bootloader en Download Mode (appui long Volume Haut — efface toutes les données)."
+        }
         if lowercasedReason.contains("0xffffffff")
             || lowercasedReason.contains("downgrade")
             || lowercasedReason.contains("incompatible") {

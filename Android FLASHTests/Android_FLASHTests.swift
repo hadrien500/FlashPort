@@ -1022,6 +1022,15 @@ struct Android_FLASHTests {
         #expect(report.errors.contains { $0.contains("downgrade bootloader impossible") })
     }
 
+    @Test func describesRejectedUnofficialBinary() {
+        let error = OdinProtocolError.binaryRejected(context: "recovery", code: 0x2)
+
+        let description = error.errorDescription ?? ""
+        #expect(description.contains("refusé le binaire"))
+        #expect(description.contains("0x2"))
+        #expect(description.contains("déverrouillage OEM") || description.contains("bootloader verrouillé"))
+    }
+
     @Test func describesBootloaderRejectResponse() {
         let error = OdinProtocolError.unexpectedResponseType(
             context: "Fin sequence boot",
