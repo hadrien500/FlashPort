@@ -1874,7 +1874,12 @@ enum FirmwareMapper {
             warnings.append("Aucune archive firmware selectionnee.")
         }
         warnings.append(contentsOf: duplicatePartitionWarnings(in: mappings))
-        errors.append(contentsOf: criticalUnmatchedImageErrors(in: unmatchedEntries))
+        // Sans source de partitions (PIT non lu, pas de noms directs), toutes
+        // les images sont mécaniquement non associées : ce n'est pas une
+        // erreur, la validation finale aura lieu après la lecture du PIT.
+        if !flashablePartitions.isEmpty || usesDirectPartitionNames {
+            errors.append(contentsOf: criticalUnmatchedImageErrors(in: unmatchedEntries))
+        }
 
         return FirmwareValidationReport(
             mappings: mappings.sorted { lhs, rhs in

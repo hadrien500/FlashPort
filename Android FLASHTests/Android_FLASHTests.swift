@@ -755,6 +755,29 @@ struct Android_FLASHTests {
         #expect(report.errors.contains { $0.contains("unknown.img.lz4") })
     }
 
+    @Test func doesNotBlockImportedFirmwareBeforePitIsLoaded() {
+        let archive = FirmwareArchive(
+            slot: .ap,
+            url: URL(fileURLWithPath: "/tmp/AP.tar.md5"),
+            entries: [
+                FirmwareArchiveEntry(path: "boot.img.lz4", size: 4, dataOffset: 512),
+                FirmwareArchiveEntry(path: "super.img.lz4", size: 4, dataOffset: 1024)
+            ]
+        )
+
+        let report = FirmwareMapper.validate(
+            archives: [archive],
+            pitEntries: [],
+            allowsDirectPartitionNames: false
+        )
+
+        // Sans PIT ni noms directs, les images non associées ne doivent pas
+        // bloquer : la validation finale a lieu après la lecture du PIT.
+        #expect(report.errors.isEmpty)
+        #expect(report.warnings.contains { $0.contains("Lire le PIT") })
+        #expect(report.unmatchedEntries.count == 2)
+    }
+
     @Test func mapsCompressedEntryUsingPitFlashFilename() throws {
         let archive = FirmwareArchive(
             slot: .bl,
