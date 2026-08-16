@@ -430,6 +430,54 @@ final class FlashViewModel {
         }
     }
 
+    /// Importe un recovery personnalisé (TWRP) en .img, .img.lz4, .tar ou
+    /// .tar.md5 : remplace la sélection firmware par cette seule image, mappée
+    /// sur la partition recovery.
+    func importRecoveryImage(_ url: URL) {
+        isImportingFirmware = true
+        state = .idle
+        completedOperation = nil
+        isReadingPitBeforeFlash = false
+        firmwareImportProgress = FirmwareImportProgress(
+            message: "Analyse du recovery",
+            progress: 0.2
+        )
+        appendLog("Import recovery personnalisé : \(url.lastPathComponent)")
+
+        DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            do {
+                let archive = try RecoveryImageImporter.makeArchive(from: url)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.replaceTemporaryImportDirectory(with: nil)
+                    self.availableFirmwareArchives = [archive]
+                    self.importedFirmwareSourceName = url.lastPathComponent
+                    self.applyActiveFirmwareArchives(autoSelect: true)
+                    self.firmwareImportProgress = FirmwareImportProgress(
+                        message: "Recovery chargé",
+                        progress: 1,
+                        isComplete: true
+                    )
+                    self.isImportingFirmware = false
+                    self.appendLog("Recovery prêt : \(url.lastPathComponent) sera flashé sur la partition recovery.")
+                    self.appendLog("TWRP : redémarrage automatique désactivé. Après le flash, quitte Download puis maintiens Volume Haut + Power jusqu'à TWRP.")
+                }
+            } catch {
+                let reason = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    self.firmwareImportProgress = FirmwareImportProgress(
+                        message: "Échec import recovery",
+                        progress: 0,
+                        isFailed: true
+                    )
+                    self.isImportingFirmware = false
+                    self.appendLog("Échec import recovery : \(reason)")
+                }
+            }
+        }
+    }
+
     func setFirmwareArchive(_ url: URL, for slot: FirmwareSlot) {
         isImportingFirmware = true
         state = .idle

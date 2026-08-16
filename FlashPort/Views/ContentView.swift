@@ -1310,6 +1310,26 @@ struct ContentView: View {
                     }
                 }
 
+                advancedSection(
+                    "Recovery personnalisé (TWRP)",
+                    systemImage: "wrench.and.screwdriver",
+                    subtitle: "Flasher un recovery TWRP (.img, .img.lz4, .tar ou .tar.md5) directement sur la partition recovery."
+                ) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button {
+                            selectRecoveryImage(viewModel: viewModel)
+                        } label: {
+                            Label("Flasher un recovery…", systemImage: "internaldrive")
+                        }
+                        .disabled(viewModel.isImportingFirmware)
+
+                        Text("Le fichier choisi remplace la sélection firmware en cours. Vérifie que la build TWRP correspond exactement au modèle du téléphone. Après le flash, quitte Download puis maintiens Volume Haut + Power jusqu'à TWRP.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
                 if interfaceMode == .expert {
                     advancedSection(
                         "Actions rapides",
@@ -2266,6 +2286,18 @@ struct ContentView: View {
             }
         }
         return true
+    }
+
+    private func selectRecoveryImage(viewModel: FlashViewModel) {
+        let panel = NSOpenPanel()
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        panel.title = "Choisir un recovery (.img, .img.lz4, .tar ou .tar.md5)"
+        panel.prompt = "Choisir"
+        panel.allowedContentTypes = [.data]
+        if panel.runModal() == .OK, let url = panel.url {
+            viewModel.importRecoveryImage(url)
+        }
     }
 
     private func selectFirmwareBundle() {

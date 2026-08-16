@@ -3,6 +3,11 @@
 Toutes les évolutions notables de FlashPort sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le projet suit [SemVer](https://semver.org/lang/fr/).
 
+## [Non publié] — prochaine bêta 4
+
+### Ajouté
+- Flash direct d'un recovery personnalisé (TWRP) : bouton « Flasher un recovery… » dans les paramètres avancés, qui accepte un fichier .img, .img.lz4, .tar ou .tar.md5 et le mappe automatiquement sur la partition recovery (limite 256 Mo, redémarrage automatique désactivé).
+
 ## [1.0.0-beta.3] — 2026-08-16
 
 ### Ajouté

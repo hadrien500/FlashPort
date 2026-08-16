@@ -767,6 +767,58 @@ struct Android_FLASHTests {
         #expect(description.contains("3 GB") || description.contains("3 Go"))
     }
 
+    @Test func importsBareRecoveryImageAsRecoveryPartitionTarget() throws {
+        let url = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlashPortTest-twrp-3.7.0-a13ve-\(UUID().uuidString).img")
+        try Data(repeating: 0xAB, count: 2048).write(to: url)
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let archive = try RecoveryImageImporter.makeArchive(from: url)
+
+        #expect(archive.slot == .ap)
+        #expect(archive.url == url)
+        #expect(archive.entries.map(\.fileName) == ["recovery.img"])
+        #expect(archive.entries.first?.size == 2048)
+        #expect(archive.entries.first?.dataOffset == 0)
+        #expect(archive.entries.first?.normalizedPartitionCandidate == "recovery")
+    }
+
+    @Test func importsRecoveryFromTarAndRenamesEntry() throws {
+        let url = try makeTemporaryTar(entries: [
+            ("twrp-3.7.0_9-a13ve.img", Data(repeating: 0xCD, count: 4))
+        ])
+        defer { try? FileManager.default.removeItem(at: url) }
+
+        let archive = try RecoveryImageImporter.makeArchive(from: url)
+
+        #expect(archive.entries.map(\.fileName) == ["recovery.img"])
+        #expect(archive.entries.first?.size == 4)
+        #expect(archive.entries.first?.dataOffset == 512)
+    }
+
+    @Test func rejectsUnsupportedOrOversizedRecoveryFiles() throws {
+        let zipURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlashPortTest-\(UUID().uuidString).zip")
+        try Data(repeating: 0x01, count: 8).write(to: zipURL)
+        defer { try? FileManager.default.removeItem(at: zipURL) }
+
+        #expect(throws: RecoveryImportError.self) {
+            try RecoveryImageImporter.makeArchive(from: zipURL)
+        }
+
+        let oversizedURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("FlashPortTest-\(UUID().uuidString).img")
+        FileManager.default.createFile(atPath: oversizedURL.path, contents: nil)
+        let handle = try FileHandle(forWritingTo: oversizedURL)
+        try handle.truncate(atOffset: 300 * 1024 * 1024)
+        try handle.close()
+        defer { try? FileManager.default.removeItem(at: oversizedURL) }
+
+        #expect(throws: RecoveryImportError.self) {
+            try RecoveryImageImporter.makeArchive(from: oversizedURL)
+        }
+    }
+
     @Test func comparesReleaseVersionsForUpdateCheck() throws {
         let beta2 = try #require(ReleaseVersion(tag: "v1.0.0-beta.2"))
         let beta3 = try #require(ReleaseVersion(tag: "v1.0.0-beta.3"))

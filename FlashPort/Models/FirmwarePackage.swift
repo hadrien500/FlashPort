@@ -1137,6 +1137,87 @@ enum FirmwareBundleImporter {
     }
 }
 
+enum RecoveryImportError: Error, LocalizedError, Equatable {
+    case unsupportedFile(String)
+    case unreadableFile(String)
+    case noImageFound(String)
+    case imageTooLarge(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .unsupportedFile(let name):
+            return "\(name) : choisir un recovery .img, .img.lz4, .tar ou .tar.md5."
+        case .unreadableFile(let name):
+            return "\(name) : fichier illisible ou vide."
+        case .noImageFound(let name):
+            return "\(name) : aucune image flashable trouvée dans l'archive."
+        case .imageTooLarge(let name):
+            return "\(name) : trop volumineux pour une partition recovery (plus de 256 Mo)."
+        }
+    }
+}
+
+/// Prépare un recovery personnalisé (TWRP) choisi directement en .img,
+/// .img.lz4, .tar ou .tar.md5 : l'image est renommée recovery.img(.lz4) pour
+/// cibler la partition recovery du PIT quel que soit le nom du fichier.
+enum RecoveryImageImporter {
+    private static let maximumRecoveryImageSize: UInt64 = 256 * 1024 * 1024
+
+    static func makeArchive(from url: URL) throws -> FirmwareArchive {
+        let lowercasedName = url.lastPathComponent.lowercased()
+
+        if lowercasedName.hasSuffix(".tar") || lowercasedName.hasSuffix(".tar.md5") {
+            let archive = try SamsungFirmwareArchiveReader.readArchive(url: url, slot: .ap)
+            guard let entry = archive.entries.first(where: { $0.isFlashImageCandidate }),
+                  entry.size > 0 else {
+                throw RecoveryImportError.noImageFound(url.lastPathComponent)
+            }
+            guard entry.size <= maximumRecoveryImageSize else {
+                throw RecoveryImportError.imageTooLarge(url.lastPathComponent)
+            }
+            return FirmwareArchive(
+                slot: .ap,
+                url: url,
+                entries: [recoveryEntry(originalName: entry.fileName, size: entry.size, dataOffset: entry.dataOffset)]
+            )
+        }
+
+        guard lowercasedName.hasSuffix(".img") || lowercasedName.hasSuffix(".img.lz4") else {
+            throw RecoveryImportError.unsupportedFile(url.lastPathComponent)
+        }
+
+        let didAccess = url.startAccessingSecurityScopedResource()
+        defer {
+            if didAccess {
+                url.stopAccessingSecurityScopedResource()
+            }
+        }
+
+        let fileSize = UInt64(max((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0, 0))
+        guard fileSize > 0 else {
+            throw RecoveryImportError.unreadableFile(url.lastPathComponent)
+        }
+        guard fileSize <= maximumRecoveryImageSize else {
+            throw RecoveryImportError.imageTooLarge(url.lastPathComponent)
+        }
+
+        return FirmwareArchive(
+            slot: .ap,
+            url: url,
+            entries: [recoveryEntry(originalName: lowercasedName, size: fileSize, dataOffset: 0)]
+        )
+    }
+
+    private static func recoveryEntry(originalName: String, size: UInt64, dataOffset: UInt64) -> FirmwareArchiveEntry {
+        let isCompressed = originalName.lowercased().hasSuffix(".lz4")
+        return FirmwareArchiveEntry(
+            path: isCompressed ? "recovery.img.lz4" : "recovery.img",
+            size: size,
+            dataOffset: dataOffset
+        )
+    }
+}
+
 enum FirmwarePayloadError: Error, LocalizedError, Equatable {
     case invalidLZ4Magic(String)
     case unsupportedLZ4Frame(String)
