@@ -21,22 +21,24 @@ Flasher un firmware peut endommager définitivement un téléphone si le firmwar
 - **Moteur du protocole Odin natif en Swift** — handshake, lecture PIT, gestion de session, séquences de transfert. Gère les images de **plus de 4 Go** (tailles 64 bits), que Heimdall 1.4.2 tronque silencieusement.
 - **Flash avec conservation des données** — respecte le `meta-data/download-list.txt` du package comme Odin : avec HOME_CSC, les images `misc.bin`, `param.bin`, `md_udc.img` et `userdata.img` sont automatiquement exclues pour préserver les données utilisateur.
 - **Garde-fous firmware** — vérification du code modèle et du binary bootloader (rev) depuis les noms d'archives, blocage anti-downgrade, détection des doublons de partition.
+- **Vérification MD5** du trailer des archives `.tar.md5` à l'import : une archive corrompue est bloquée avant tout envoi au téléphone.
 - **Détection automatique** du téléphone en mode Download (VID Samsung `0x04E8`).
 - **Décompression LZ4** — via le binaire `lz4` s'il est installé, sinon décodeur Swift intégré.
-- **Backend Heimdall optionnel** pour les configurations où il fonctionne bien (voir limites ci-dessous).
+- **Backend Heimdall optionnel** en secours (voir limites ci-dessous) — aucune installation requise pour le moteur natif par défaut.
+- Confort : glisser-déposer du firmware sur la fenêtre, notification de fin de flash, anti-veille pendant le flash, réglages mémorisés.
 - Console de logs en direct, export de rapport de session, export PIT, historique des flashs.
 
 ## Prérequis
 
 - macOS 14.6 ou plus récent.
 - Xcode 16+ pour compiler.
-- Optionnel : [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) pour le backend Heimdall optionnel (secours).
+- Optionnel : [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) si vous souhaitez utiliser le backend de secours « Heimdall (externe) » — inutile pour le moteur natif par défaut.
 
 ## Utilisation
 
 1. Mettez le téléphone Samsung en mode Download (Vol + et Vol − câble USB branché, puis Vol + pour confirmer).
 2. Ouvrez FlashPort — le téléphone est détecté automatiquement.
-3. Importez le ZIP firmware complet (ex. depuis SamFW/Frija) ou un dossier extrait.
+3. Importez le ZIP firmware complet (ex. depuis SamFW/Frija) ou un dossier extrait — bouton « Importer firmware » ou glisser-déposer sur la fenêtre. Le MD5 des archives est vérifié automatiquement.
 4. Choisissez le mode de données :
    - **Effacer données** — utilise le CSC, inclut `userdata`.
    - **Sans effacement** — utilise le HOME_CSC et la download-list du package.
@@ -81,22 +83,24 @@ Flashing firmware can permanently damage a device if the firmware, model, or reg
 - **Native Odin protocol engine written in Swift** — handshake, PIT read, session management, file transfer sequences. Handles images **larger than 4 GB** (64-bit sizes), which Heimdall 1.4.2 silently truncates.
 - **Data-preserving flash** — honors the package's `meta-data/download-list.txt` like Odin does: with HOME_CSC, images such as `misc.bin`, `param.bin`, `md_udc.img` and `userdata.img` are automatically excluded so user data survives the flash.
 - **Firmware safety checks** — model code and bootloader binary (rev) validation from archive names, downgrade blocking, duplicate partition detection.
+- **MD5 verification** of `.tar.md5` archive trailers at import: corrupted archives are rejected before anything is sent to the device.
 - **Automatic device detection** in Download Mode (Samsung VID `0x04E8`).
 - **LZ4 decompression** — native `lz4` CLI when available, pure-Swift fallback decoder otherwise.
-- **Optional Heimdall backend** for devices/setups where it works well.
+- **Optional Heimdall fallback backend** — nothing to install for the default native engine.
+- Convenience: drag and drop firmware onto the window, flash-completion notification, sleep prevention during a flash, persisted settings.
 - Live log console, session report export, PIT export, flash history.
 
 ### Requirements
 
 - macOS 14.6 or later.
 - Xcode 16+ to build.
-- Optional: [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) for the optional Heimdall fallback backend.
+- Optional: [Heimdall](https://glassechidna.com.au/heimdall/) (`brew install heimdall`) only if you want the "Heimdall (external)" fallback backend — not needed for the default native engine.
 
 ### Basic workflow
 
 1. Put the Samsung device in Download Mode (Vol Up + Vol Down with USB cable plugged in, then Vol Up).
 2. Open FlashPort — the device is detected automatically.
-3. Import the full firmware ZIP (e.g. from SamFW/Frija) or an extracted folder.
+3. Import the full firmware ZIP (e.g. from SamFW/Frija) or an extracted folder — "Importer firmware" button or drag and drop onto the window. Archive MD5 checksums are verified automatically.
 4. Choose the data mode: **Effacer données** (wipe, uses CSC) or **Sans effacement** (preserve data, uses HOME_CSC and the package's download-list).
 5. Flash. The PIT is read automatically when needed; images over 4 GB (`super`) are flashed by the native Swift engine.
 6. First boot after a flash can take several minutes.
