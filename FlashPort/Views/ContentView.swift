@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var showsManualFirmwareChecks = false
     @State private var interfaceMode: InterfaceMode = .guided
     @State private var isFirmwareDropTargeted = false
+    @State private var updateChecker = UpdateChecker()
 
     private var activeStepColor: Color {
         Color(red: 0.28, green: 0.82, blue: 0.94)
@@ -89,6 +90,9 @@ struct ContentView: View {
         .onDisappear {
             viewModel.stopAutomaticDeviceDetection()
         }
+        .task {
+            await updateChecker.checkForUpdate()
+        }
     }
 
     private var topBar: some View {
@@ -121,6 +125,21 @@ struct ContentView: View {
             }
 
             Spacer()
+
+            if let updateTag = updateChecker.availableUpdateTag {
+                Button {
+                    updateChecker.openUpdatePage()
+                } label: {
+                    Label("Mise à jour disponible (\(updateTag))", systemImage: "arrow.down.circle.fill")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color(red: 0.22, green: 0.84, blue: 0.42)))
+                }
+                .buttonStyle(.plain)
+                .help("Ouvrir la page de téléchargement GitHub")
+            }
 
             Button {
                 showsAppInfo = true

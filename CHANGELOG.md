@@ -3,6 +3,14 @@
 Toutes les évolutions notables de FlashPort sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le projet suit [SemVer](https://semver.org/lang/fr/).
 
+## [Non publié] — prochaine bêta 3
+
+### Ajouté
+- Vérification de mise à jour au lancement : si une nouvelle release est publiée sur GitHub, un bouton « Mise à jour disponible » ouvre la page de téléchargement.
+
+### Corrigé
+- Le firmware importé n'est plus marqué « À vérifier » avant la lecture du PIT (régression de la bêta 2 liée au moteur natif par défaut).
+
 ## [1.0.0-beta.2] — 2026-08-15
 
 ### Ajouté

@@ -755,6 +755,21 @@ struct Android_FLASHTests {
         #expect(report.errors.contains { $0.contains("unknown.img.lz4") })
     }
 
+    @Test func comparesReleaseVersionsForUpdateCheck() throws {
+        let beta2 = try #require(ReleaseVersion(tag: "v1.0.0-beta.2"))
+        let beta3 = try #require(ReleaseVersion(tag: "v1.0.0-beta.3"))
+        let beta10 = try #require(ReleaseVersion(tag: "v1.0.0-beta.10"))
+        let stable = try #require(ReleaseVersion(tag: "v1.0.0"))
+        let nextMinor = try #require(ReleaseVersion(tag: "1.1.0-beta.1"))
+
+        #expect(beta2 < beta3)
+        #expect(beta3 < beta10)
+        #expect(beta10 < stable)
+        #expect(stable < nextMinor)
+        #expect(!(beta2 < beta2))
+        #expect(ReleaseVersion(tag: "n-importe-quoi") == nil)
+    }
+
     @Test func doesNotBlockImportedFirmwareBeforePitIsLoaded() {
         let archive = FirmwareArchive(
             slot: .ap,
