@@ -767,6 +767,13 @@ struct ContentView: View {
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                         }
+
+                        Spacer()
+
+                        Link(destination: URL(string: "https://github.com/hadrien500/FlashPort")!) {
+                            Label("Page GitHub", systemImage: "arrow.up.right.square")
+                                .font(.caption)
+                        }
                     }
 
                     Text(appDescriptionText)
@@ -775,22 +782,64 @@ struct ContentView: View {
                         .fixedSize(horizontal: false, vertical: true)
 
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("Historique")
+                        Label("Nouveautés de cette version", systemImage: "sparkles")
                             .font(.headline)
 
-                        ForEach(appHistoryEntries, id: \.self) { entry in
+                        ForEach(appLatestChanges, id: \.self) { change in
                             HStack(alignment: .top, spacing: 8) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .font(.system(size: 12, weight: .bold))
-                                    .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
-                                    .padding(.top, 2)
+                                Circle()
+                                    .fill(Color(red: 0.28, green: 0.82, blue: 0.94))
+                                    .frame(width: 5, height: 5)
+                                    .padding(.top, 6)
 
-                                Text(entry)
+                                Text(change)
                                     .font(.callout)
-                                    .foregroundStyle(.primary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+
+                        Link(destination: URL(string: "https://github.com/hadrien500/FlashPort/blob/main/CHANGELOG.md")!) {
+                            Label("Historique complet des versions", systemImage: "clock.arrow.circlepath")
+                                .font(.caption)
+                        }
+                        .padding(.top, 2)
+                    }
+                    .padding(14)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.primary.opacity(0.05))
+                    )
+
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("L'essentiel")
+                            .font(.headline)
+
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible(), alignment: .topLeading),
+                                GridItem(.flexible(), alignment: .topLeading)
+                            ],
+                            alignment: .leading,
+                            spacing: 12
+                        ) {
+                            ForEach(appKeyFeatures, id: \.text) { feature in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Image(systemName: feature.icon)
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Color(red: 0.28, green: 0.82, blue: 0.94))
+                                        .frame(width: 18)
+                                        .padding(.top, 2)
+
+                                    Text(feature.text)
+                                        .font(.callout)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
                             }
                         }
                     }
+
+                    Divider()
 
                     flashHistorySection(viewModel: viewModel)
                 }
@@ -2282,19 +2331,22 @@ struct ContentView: View {
         "FlashPort permet d’importer, analyser et flasher des firmwares Samsung compatibles depuis macOS. L’application détecte automatiquement les appareils en mode Download, affiche les informations du firmware, prend en charge les archives BL/AP/CP/CSC et guide le flash jusqu’au redémarrage."
     }
 
-    private var appHistoryEntries: [String] {
+    private var appLatestChanges: [String] {
         [
-            "Bêta 2 : moteur natif Swift par défaut, vérification MD5 des archives à l'import.",
-            "Bêta 2 : glisser-déposer du firmware, notification de fin de flash, anti-veille pendant le flash.",
-            "Bêta 2 : réglages mémorisés entre les lancements.",
-            "Bêta 1 : import ZIP ou dossier firmware Samsung.",
-            "Moteur Odin natif Swift : flash des images de plus de 4 Go (super).",
-            "Conservation des données : respect de la download-list Odin (HOME_CSC).",
-            "Mapping automatique des images BL/AP/CP/CSC vers les partitions.",
-            "Lecture PIT automatique quand le mode de flash en a besoin.",
-            "Blocage si le modèle firmware officiel ne correspond pas au modèle attendu.",
-            "Blocage anti-downgrade si le binary firmware est inférieur au binary actuel.",
-            "Journal détaillé pour le diagnostic USB/Odin."
+            "L'app signale automatiquement les nouvelles versions publiées sur GitHub.",
+            "Rapport de problème GitHub pré-rempli et contrôle de l'espace disque à l'import.",
+            "Correctif : le firmware importé n'est plus marqué « À vérifier » avant la lecture du PIT."
+        ]
+    }
+
+    private var appKeyFeatures: [(icon: String, text: String)] {
+        [
+            ("bolt.fill", "Moteur Odin natif Swift, images de plus de 4 Go"),
+            ("externaldrive.fill.badge.checkmark", "Conservation des données (download-list Odin)"),
+            ("checkmark.shield.fill", "Contrôles modèle, binary et anti-downgrade"),
+            ("number.circle.fill", "Vérification MD5 des archives à l'import"),
+            ("tablecells", "Lecture PIT automatique quand nécessaire"),
+            ("doc.text.fill", "Journal détaillé et export de rapport")
         ]
     }
 }
