@@ -1,12 +1,24 @@
+<div align="center">
+
+<img src="docs/icon.png" width="128" alt="Icône FlashPort">
+
 # FlashPort
 
-![CI](https://github.com/hadrien500/FlashPort/actions/workflows/ci.yml/badge.svg)
+**Un flasheur de firmwares Samsung natif pour Mac.**
 
-**Application macOS native pour flasher des firmwares Samsung en mode Download — une alternative à Odin pour Mac.**
+Flashez les packages BL, AP, CP, CSC et HOME_CSC depuis macOS — sans Windows, sans machine virtuelle, avec conservation des données, exactement comme le mode HOME_CSC d'Odin.
 
-FlashPort importe les packages firmware Samsung officiels (ZIP ou dossier extrait), associe les images BL/AP/CP/CSC à la table de partitions PIT du téléphone, et les flashe par USB — avec conservation des données, exactement comme le mode HOME_CSC d'Odin.
+[![Release](https://img.shields.io/github/v/release/hadrien500/FlashPort?include_prereleases&label=release&color=1f6feb)](https://github.com/hadrien500/FlashPort/releases)
+[![CI](https://github.com/hadrien500/FlashPort/actions/workflows/ci.yml/badge.svg)](https://github.com/hadrien500/FlashPort/actions)
+![macOS](https://img.shields.io/badge/%EF%A3%BF%20macOS-14.6%2B-black)
+![Universel](https://img.shields.io/badge/binaire-universel-6e40c9)
+![SwiftUI](https://img.shields.io/badge/SwiftUI-natif-F05138?logo=swift&logoColor=white)
+[![Licence](https://img.shields.io/badge/licence-MIT-2ea44f)](LICENSE)
+![Statut](https://img.shields.io/badge/statut-B%C3%8ATA-orange)
 
 ![Interface principale de FlashPort](docs/screenshot.png)
+
+</div>
 
 *An English version is available below: [English version](#english-version).*
 
