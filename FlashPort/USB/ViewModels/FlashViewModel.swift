@@ -297,6 +297,7 @@ final class FlashViewModel {
         }
 
         if hasCustomRecoveryFlashSelection {
+            warnings.append("Bootloader : le flash d'un binaire non officiel (TWRP) échoue si le bootloader est verrouillé. Active « Déverrouillage OEM » puis déverrouille le bootloader (Download Mode, appui long Volume Haut — efface les données) avant de flasher.")
             warnings.append("TWRP/recovery custom : ne démarre pas Android après le flash ; démarre directement en recovery.")
             warnings.append(contentsOf: customRecoveryCompatibilityWarnings(for: selectedFirmwareMappings))
         }

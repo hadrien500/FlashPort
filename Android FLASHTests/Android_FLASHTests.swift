@@ -800,6 +800,25 @@ struct Android_FLASHTests {
         #expect(Set(prepared.archive.entries.map(\.fileName)) == ["recovery.img", "vbmeta.img"])
     }
 
+    @MainActor
+    @Test func warnsAboutBootloaderUnlockForCustomRecovery() {
+        let recoveryMapping = FirmwareMapping(
+            slot: .ap,
+            archiveName: "recovery-custom.tar",
+            archiveURL: URL(fileURLWithPath: "/tmp/recovery-custom.tar"),
+            archiveEntryIndex: 0,
+            entry: FirmwareArchiveEntry(path: "recovery.img", size: 42, dataOffset: 0),
+            partition: makePitEntry(partitionName: "recovery", flashFilename: "recovery.img")
+        )
+        let viewModel = FlashViewModel()
+        viewModel.isDeviceConnected = true
+        viewModel.pitEntries = [makePitEntry(partitionName: "recovery", flashFilename: "recovery.img")]
+        viewModel.firmwareMappings = [recoveryMapping]
+        viewModel.selectedFirmwareMappingIDs = [recoveryMapping.id]
+
+        #expect(viewModel.selectionWarnings.contains { $0.contains("Déverrouillage OEM") })
+    }
+
     @Test func mapsBareTwrpFileToRecoveryPartition() {
         #expect(RecoveryImageImporter.targetName(forFileName: "twrp-3.7.1_12-1-a13.img") == "recovery.img")
         #expect(RecoveryImageImporter.targetName(forFileName: "vbmeta.img") == "vbmeta.img")
