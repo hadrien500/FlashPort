@@ -430,10 +430,12 @@ final class FlashViewModel {
         }
     }
 
-    /// Importe un recovery personnalisé (TWRP) en .img, .img.lz4, .tar ou
-    /// .tar.md5 : remplace la sélection firmware par cette seule image, mappée
-    /// sur la partition recovery.
-    func importRecoveryImage(_ url: URL) {
+    /// Importe un recovery personnalisé (TWRP) et ses images associées
+    /// (vbmeta…) : accepte un ou plusieurs fichiers .img/.img.lz4/.tar/.tar.md5
+    /// ou un dossier. Chaque image est mappée sur sa partition et le tout
+    /// remplace la sélection firmware en cours.
+    func importRecoveryImages(_ urls: [URL]) {
+        guard !urls.isEmpty else { return }
         isImportingFirmware = true
         state = .idle
         completedOperation = nil
@@ -442,16 +444,19 @@ final class FlashViewModel {
             message: "Analyse du recovery",
             progress: 0.2
         )
-        appendLog("Import recovery personnalisé : \(url.lastPathComponent)")
+        let sourceName = urls.count == 1
+            ? urls[0].lastPathComponent
+            : "\(urls.count) fichiers recovery"
+        appendLog("Import recovery personnalisé : \(sourceName)")
 
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             do {
-                let archive = try RecoveryImageImporter.makeArchive(from: url)
+                let prepared = try RecoveryImageImporter.makeArchive(from: urls)
                 DispatchQueue.main.async { [weak self] in
                     guard let self else { return }
-                    self.replaceTemporaryImportDirectory(with: nil)
-                    self.availableFirmwareArchives = [archive]
-                    self.importedFirmwareSourceName = url.lastPathComponent
+                    self.replaceTemporaryImportDirectory(with: prepared.temporaryDirectory)
+                    self.availableFirmwareArchives = [prepared.archive]
+                    self.importedFirmwareSourceName = sourceName
                     self.applyActiveFirmwareArchives(autoSelect: true)
                     self.firmwareImportProgress = FirmwareImportProgress(
                         message: "Recovery chargé",
@@ -459,8 +464,10 @@ final class FlashViewModel {
                         isComplete: true
                     )
                     self.isImportingFirmware = false
-                    self.appendLog("Recovery prêt : \(url.lastPathComponent) sera flashé sur la partition recovery.")
+                    let targets = prepared.archive.entries.map(\.fileName).joined(separator: ", ")
+                    self.appendLog("Recovery prêt : \(targets).")
                     self.appendLog("TWRP : redémarrage automatique désactivé. Après le flash, quitte Download puis maintiens Volume Haut + Power jusqu'à TWRP.")
+                    self.appendLog("Rappel : le flash d'un binaire non officiel exige un bootloader déverrouillé (Déverrouillage OEM).")
                 }
             } catch {
                 let reason = (error as? LocalizedError)?.errorDescription ?? String(describing: error)

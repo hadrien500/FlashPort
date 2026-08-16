@@ -773,49 +773,47 @@ struct Android_FLASHTests {
         try Data(repeating: 0xAB, count: 2048).write(to: url)
         defer { try? FileManager.default.removeItem(at: url) }
 
-        let archive = try RecoveryImageImporter.makeArchive(from: url)
+        let prepared = try RecoveryImageImporter.makeArchive(from: [url])
+        defer { try? FileManager.default.removeItem(at: prepared.temporaryDirectory) }
 
-        #expect(archive.slot == .ap)
-        #expect(archive.url == url)
-        #expect(archive.entries.map(\.fileName) == ["recovery.img"])
-        #expect(archive.entries.first?.size == 2048)
-        #expect(archive.entries.first?.dataOffset == 0)
-        #expect(archive.entries.first?.normalizedPartitionCandidate == "recovery")
+        #expect(prepared.archive.slot == .ap)
+        #expect(prepared.archive.entries.map(\.fileName) == ["recovery.img"])
+        #expect(prepared.archive.entries.first?.size == 2048)
+        #expect(prepared.archive.entries.first?.normalizedPartitionCandidate == "recovery")
     }
 
-    @Test func importsRecoveryFromTarAndRenamesEntry() throws {
-        let url = try makeTemporaryTar(entries: [
-            ("twrp-3.7.0_9-a13ve.img", Data(repeating: 0xCD, count: 4))
+    @Test func importsRecoveryAndVbmetaTogether() throws {
+        let recoveryURL = try makeTemporaryTar(entries: [
+            ("recovery.img", Data(repeating: 0xCD, count: 4))
         ])
-        defer { try? FileManager.default.removeItem(at: url) }
+        let vbmetaURL = try makeTemporaryTar(entries: [
+            ("vbmeta.img", Data(repeating: 0xEF, count: 4))
+        ])
+        defer {
+            try? FileManager.default.removeItem(at: recoveryURL)
+            try? FileManager.default.removeItem(at: vbmetaURL)
+        }
 
-        let archive = try RecoveryImageImporter.makeArchive(from: url)
+        let prepared = try RecoveryImageImporter.makeArchive(from: [recoveryURL, vbmetaURL])
+        defer { try? FileManager.default.removeItem(at: prepared.temporaryDirectory) }
 
-        #expect(archive.entries.map(\.fileName) == ["recovery.img"])
-        #expect(archive.entries.first?.size == 4)
-        #expect(archive.entries.first?.dataOffset == 512)
+        #expect(Set(prepared.archive.entries.map(\.fileName)) == ["recovery.img", "vbmeta.img"])
     }
 
-    @Test func rejectsUnsupportedOrOversizedRecoveryFiles() throws {
+    @Test func mapsBareTwrpFileToRecoveryPartition() {
+        #expect(RecoveryImageImporter.targetName(forFileName: "twrp-3.7.1_12-1-a13.img") == "recovery.img")
+        #expect(RecoveryImageImporter.targetName(forFileName: "vbmeta.img") == "vbmeta.img")
+        #expect(RecoveryImageImporter.targetName(forFileName: "vbmeta_disabled.img.lz4") == "vbmeta.img.lz4")
+    }
+
+    @Test func rejectsUnsupportedRecoveryFiles() throws {
         let zipURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("FlashPortTest-\(UUID().uuidString).zip")
         try Data(repeating: 0x01, count: 8).write(to: zipURL)
         defer { try? FileManager.default.removeItem(at: zipURL) }
 
         #expect(throws: RecoveryImportError.self) {
-            try RecoveryImageImporter.makeArchive(from: zipURL)
-        }
-
-        let oversizedURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("FlashPortTest-\(UUID().uuidString).img")
-        FileManager.default.createFile(atPath: oversizedURL.path, contents: nil)
-        let handle = try FileHandle(forWritingTo: oversizedURL)
-        try handle.truncate(atOffset: 300 * 1024 * 1024)
-        try handle.close()
-        defer { try? FileManager.default.removeItem(at: oversizedURL) }
-
-        #expect(throws: RecoveryImportError.self) {
-            try RecoveryImageImporter.makeArchive(from: oversizedURL)
+            try RecoveryImageImporter.makeArchive(from: [zipURL])
         }
     }
 

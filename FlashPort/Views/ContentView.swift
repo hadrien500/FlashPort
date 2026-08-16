@@ -1313,7 +1313,7 @@ struct ContentView: View {
                 advancedSection(
                     "Recovery personnalisé (TWRP)",
                     systemImage: "wrench.and.screwdriver",
-                    subtitle: "Flasher un recovery TWRP (.img, .img.lz4, .tar ou .tar.md5) directement sur la partition recovery."
+                    subtitle: "Flasher un recovery TWRP et son vbmeta (.img, .img.lz4, .tar, .tar.md5) ou un dossier complet."
                 ) {
                     VStack(alignment: .leading, spacing: 8) {
                         Button {
@@ -1323,7 +1323,7 @@ struct ContentView: View {
                         }
                         .disabled(viewModel.isImportingFirmware)
 
-                        Text("Le fichier choisi remplace la sélection firmware en cours. Vérifie que la build TWRP correspond exactement au modèle du téléphone. Après le flash, quitte Download puis maintiens Volume Haut + Power jusqu'à TWRP.")
+                        Text("Sélectionne un ou plusieurs fichiers (recovery + vbmeta patché) ou le dossier qui les contient. Chaque image est mappée sur sa partition. Vérifie que la build TWRP correspond exactement au modèle et au chipset du téléphone. Un bootloader déverrouillé (Déverrouillage OEM) est requis. Après le flash, quitte Download puis maintiens Volume Haut + Power jusqu'à TWRP.")
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -2290,13 +2290,15 @@ struct ContentView: View {
 
     private func selectRecoveryImage(viewModel: FlashViewModel) {
         let panel = NSOpenPanel()
-        panel.allowsMultipleSelection = false
-        panel.canChooseDirectories = false
-        panel.title = "Choisir un recovery (.img, .img.lz4, .tar ou .tar.md5)"
+        panel.allowsMultipleSelection = true
+        panel.canChooseDirectories = true
+        panel.canChooseFiles = true
+        panel.title = "Choisir un recovery et son vbmeta (.img, .tar) ou un dossier"
+        panel.message = "Sélectionne le recovery TWRP, et le vbmeta patché si nécessaire, ou le dossier qui les contient."
         panel.prompt = "Choisir"
-        panel.allowedContentTypes = [.data]
-        if panel.runModal() == .OK, let url = panel.url {
-            viewModel.importRecoveryImage(url)
+        panel.allowedContentTypes = [.data, .folder]
+        if panel.runModal() == .OK, !panel.urls.isEmpty {
+            viewModel.importRecoveryImages(panel.urls)
         }
     }
 

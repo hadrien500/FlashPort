@@ -1157,32 +1157,100 @@ enum RecoveryImportError: Error, LocalizedError, Equatable {
     }
 }
 
-/// Prépare un recovery personnalisé (TWRP) choisi directement en .img,
-/// .img.lz4, .tar ou .tar.md5 : l'image est renommée recovery.img(.lz4) pour
-/// cibler la partition recovery du PIT quel que soit le nom du fichier.
+/// Prépare un recovery personnalisé (TWRP) et ses images associées (vbmeta…)
+/// choisis directement en .img, .img.lz4, .tar, .tar.md5 — un ou plusieurs
+/// fichiers, ou un dossier. Chaque image est renommée vers sa partition cible
+/// (recovery.img, vbmeta.img) et regroupée dans une archive TAR unique qui
+/// réutilise le pipeline de flash existant.
 enum RecoveryImageImporter {
-    private static let maximumRecoveryImageSize: UInt64 = 256 * 1024 * 1024
+    private static let maximumImageSize: UInt64 = 256 * 1024 * 1024
+    private static let tarBlockSize = 512
 
-    static func makeArchive(from url: URL) throws -> FirmwareArchive {
+    struct PreparedRecovery {
+        var archive: FirmwareArchive
+        var temporaryDirectory: URL
+    }
+
+    private struct SourceImage {
+        var targetName: String
+        var sourceURL: URL
+        var dataOffset: UInt64
+        var size: UInt64
+    }
+
+    static func makeArchive(from urls: [URL]) throws -> PreparedRecovery {
+        let expandedURLs = urls.flatMap { expand($0) }
+        guard !expandedURLs.isEmpty else {
+            throw RecoveryImportError.noImageFound(urls.first?.lastPathComponent ?? "sélection")
+        }
+
+        var sources: [SourceImage] = []
+        for url in expandedURLs {
+            sources.append(contentsOf: try sourceImages(from: url))
+        }
+        guard !sources.isEmpty else {
+            throw RecoveryImportError.noImageFound(expandedURLs.first?.lastPathComponent ?? "sélection")
+        }
+
+        let temporaryDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("AndroidFLASH-Recovery-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
+
+        do {
+            let combinedTarURL = temporaryDirectory.appendingPathComponent("recovery-custom.tar")
+            try writeCombinedTar(sources: sources, to: combinedTarURL)
+            let archive = try SamsungFirmwareArchiveReader.readArchive(url: combinedTarURL, slot: .ap)
+            return PreparedRecovery(archive: archive, temporaryDirectory: temporaryDirectory)
+        } catch {
+            try? FileManager.default.removeItem(at: temporaryDirectory)
+            throw error
+        }
+    }
+
+    private static func expand(_ url: URL) -> [URL] {
+        guard (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true else {
+            return [url]
+        }
+        guard let entries = try? FileManager.default.contentsOfDirectory(
+            at: url,
+            includingPropertiesForKeys: nil,
+            options: [.skipsHiddenFiles]
+        ) else {
+            return []
+        }
+        return entries.filter { isSupported($0) }.sorted { $0.lastPathComponent < $1.lastPathComponent }
+    }
+
+    private static func isSupported(_ url: URL) -> Bool {
+        let name = url.lastPathComponent.lowercased()
+        return name.hasSuffix(".img") || name.hasSuffix(".img.lz4")
+            || name.hasSuffix(".bin") || name.hasSuffix(".bin.lz4")
+            || name.hasSuffix(".tar") || name.hasSuffix(".tar.md5")
+    }
+
+    private static func sourceImages(from url: URL) throws -> [SourceImage] {
         let lowercasedName = url.lastPathComponent.lowercased()
 
         if lowercasedName.hasSuffix(".tar") || lowercasedName.hasSuffix(".tar.md5") {
             let archive = try SamsungFirmwareArchiveReader.readArchive(url: url, slot: .ap)
-            guard let entry = archive.entries.first(where: { $0.isFlashImageCandidate }),
-                  entry.size > 0 else {
+            let flashable = archive.entries.filter { $0.isFlashImageCandidate && $0.size > 0 }
+            guard !flashable.isEmpty else {
                 throw RecoveryImportError.noImageFound(url.lastPathComponent)
             }
-            guard entry.size <= maximumRecoveryImageSize else {
-                throw RecoveryImportError.imageTooLarge(url.lastPathComponent)
+            return try flashable.map { entry in
+                guard entry.size <= maximumImageSize else {
+                    throw RecoveryImportError.imageTooLarge(entry.fileName)
+                }
+                return SourceImage(
+                    targetName: targetName(forFileName: entry.fileName),
+                    sourceURL: url,
+                    dataOffset: entry.dataOffset,
+                    size: entry.size
+                )
             }
-            return FirmwareArchive(
-                slot: .ap,
-                url: url,
-                entries: [recoveryEntry(originalName: entry.fileName, size: entry.size, dataOffset: entry.dataOffset)]
-            )
         }
 
-        guard lowercasedName.hasSuffix(".img") || lowercasedName.hasSuffix(".img.lz4") else {
+        guard isSupported(url) else {
             throw RecoveryImportError.unsupportedFile(url.lastPathComponent)
         }
 
@@ -1197,24 +1265,99 @@ enum RecoveryImageImporter {
         guard fileSize > 0 else {
             throw RecoveryImportError.unreadableFile(url.lastPathComponent)
         }
-        guard fileSize <= maximumRecoveryImageSize else {
+        guard fileSize <= maximumImageSize else {
             throw RecoveryImportError.imageTooLarge(url.lastPathComponent)
         }
 
-        return FirmwareArchive(
-            slot: .ap,
-            url: url,
-            entries: [recoveryEntry(originalName: lowercasedName, size: fileSize, dataOffset: 0)]
-        )
+        return [
+            SourceImage(
+                targetName: targetName(forFileName: url.lastPathComponent),
+                sourceURL: url,
+                dataOffset: 0,
+                size: fileSize
+            )
+        ]
     }
 
-    private static func recoveryEntry(originalName: String, size: UInt64, dataOffset: UInt64) -> FirmwareArchiveEntry {
-        let isCompressed = originalName.lowercased().hasSuffix(".lz4")
-        return FirmwareArchiveEntry(
-            path: isCompressed ? "recovery.img.lz4" : "recovery.img",
-            size: size,
-            dataOffset: dataOffset
-        )
+    /// Détermine la partition cible d'un fichier : les images déjà nommées
+    /// comme une partition (recovery, vbmeta, boot, dtbo) sont conservées ;
+    /// tout le reste (ex. twrp-3.7.1_12-1-a13.img) est traité comme recovery.
+    static func targetName(forFileName fileName: String) -> String {
+        let lower = fileName.lowercased()
+        let suffix = lower.hasSuffix(".lz4") ? ".img.lz4" : ".img"
+
+        for partition in ["vbmeta_system", "vbmeta_vendor", "vbmeta", "dtbo", "boot", "recovery"] where lower.contains(partition) {
+            return partition + suffix
+        }
+        return "recovery" + suffix
+    }
+
+    private static func writeCombinedTar(sources: [SourceImage], to destinationURL: URL) throws {
+        FileManager.default.createFile(atPath: destinationURL.path, contents: nil)
+        let output = try FileHandle(forWritingTo: destinationURL)
+        defer { try? output.close() }
+
+        for source in sources {
+            output.write(tarHeader(name: source.targetName, size: source.size))
+
+            let didAccess = source.sourceURL.startAccessingSecurityScopedResource()
+            let input = try FileHandle(forReadingFrom: source.sourceURL)
+            try input.seek(toOffset: source.dataOffset)
+
+            var remaining = source.size
+            let chunkSize = 4 * 1024 * 1024
+            while remaining > 0 {
+                let count = Int(min(UInt64(chunkSize), remaining))
+                let chunk = input.readData(ofLength: count)
+                guard chunk.count == count else {
+                    try? input.close()
+                    if didAccess { source.sourceURL.stopAccessingSecurityScopedResource() }
+                    throw RecoveryImportError.unreadableFile(source.sourceURL.lastPathComponent)
+                }
+                output.write(chunk)
+                remaining -= UInt64(count)
+            }
+            try? input.close()
+            if didAccess { source.sourceURL.stopAccessingSecurityScopedResource() }
+
+            let padding = (tarBlockSize - Int(source.size % UInt64(tarBlockSize))) % tarBlockSize
+            if padding > 0 {
+                output.write(Data(repeating: 0, count: padding))
+            }
+        }
+
+        output.write(Data(repeating: 0, count: tarBlockSize * 2))
+    }
+
+    private static func tarHeader(name: String, size: UInt64) -> Data {
+        var header = [UInt8](repeating: 0, count: tarBlockSize)
+
+        func write(_ string: String, at offset: Int, length: Int) {
+            for (index, byte) in Array(string.utf8).prefix(length - 1).enumerated() {
+                header[offset + index] = byte
+            }
+        }
+
+        write(String(name.prefix(99)), at: 0, length: 100)
+        write("0000644", at: 100, length: 8)
+        write("0000000", at: 108, length: 8)
+        write("0000000", at: 116, length: 8)
+        write(String(format: "%011o", size), at: 124, length: 12)
+        write("00000000000", at: 136, length: 12)
+        write("ustar", at: 257, length: 6)
+        header[263] = UInt8(ascii: "0")
+        header[264] = UInt8(ascii: "0")
+        header[156] = UInt8(ascii: "0") // typeflag fichier normal
+
+        // Checksum : somme de tous les octets, champ 148..156 rempli d'espaces.
+        for index in 148..<156 {
+            header[index] = UInt8(ascii: " ")
+        }
+        let checksum = header.reduce(0) { $0 + Int($1) }
+        write(String(format: "%06o", checksum), at: 148, length: 7)
+        header[155] = UInt8(ascii: " ")
+
+        return Data(header)
     }
 }
 
