@@ -3,13 +3,16 @@
 Toutes les évolutions notables de FlashPort sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le projet suit [SemVer](https://semver.org/lang/fr/).
 
-## [Non publié] — prochaine bêta 3
+## [1.0.0-beta.3] — 2026-08-16
 
 ### Ajouté
 - Vérification de mise à jour au lancement : si une nouvelle release est publiée sur GitHub, un bouton « Mise à jour disponible » ouvre la page de téléchargement.
 - Bouton « Signaler un problème » (panneau ⓘ) : ouvre un rapport GitHub pré-rempli avec la version, le téléphone détecté et le firmware importé.
 - Modèles de rapport GitHub en français (bug et proposition d'amélioration).
 - Contrôle de l'espace disque avant l'extraction du ZIP firmware, avec message explicite si le disque est trop plein.
+
+### Modifié
+- Fenêtre Informations repensée : nouveautés de la version en encadré, fonctions clés en grille, lien vers le changelog complet.
 
 ### Corrigé
 - Le firmware importé n'est plus marqué « À vérifier » avant la lecture du PIT (régression de la bêta 2 liée au moteur natif par défaut).
