@@ -755,6 +755,18 @@ struct Android_FLASHTests {
         #expect(report.errors.contains { $0.contains("unknown.img.lz4") })
     }
 
+    @Test func describesInsufficientDiskSpaceError() {
+        let error = FirmwareBundleImportError.insufficientDiskSpace(
+            requiredBytes: 8_000_000_000,
+            availableBytes: 3_000_000_000
+        )
+
+        let description = error.errorDescription ?? ""
+        #expect(description.contains("Espace disque insuffisant"))
+        #expect(description.contains("8 GB") || description.contains("8 Go"))
+        #expect(description.contains("3 GB") || description.contains("3 Go"))
+    }
+
     @Test func comparesReleaseVersionsForUpdateCheck() throws {
         let beta2 = try #require(ReleaseVersion(tag: "v1.0.0-beta.2"))
         let beta3 = try #require(ReleaseVersion(tag: "v1.0.0-beta.3"))

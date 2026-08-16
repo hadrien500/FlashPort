@@ -731,6 +731,13 @@ struct ContentView: View {
 
                 Spacer()
 
+                Button {
+                    reportIssue(viewModel: viewModel)
+                } label: {
+                    Label("Signaler un problème", systemImage: "ladybug")
+                }
+                .help("Ouvre un rapport GitHub pré-rempli avec la version et le téléphone détecté")
+
                 Button("Fermer") {
                     showsAppInfo = false
                 }
@@ -2175,6 +2182,25 @@ struct ContentView: View {
             return .green
         }
         return .secondary
+    }
+
+    private func reportIssue(viewModel: FlashViewModel) {
+        var components = URLComponents(string: "https://github.com/hadrien500/FlashPort/issues/new")!
+        components.queryItems = [
+            URLQueryItem(name: "template", value: "rapport-de-flash.yml"),
+            URLQueryItem(name: "version", value: "\(appVersionText)"),
+            URLQueryItem(
+                name: "telephone",
+                value: viewModel.connectedDeviceDescription
+                    ?? viewModel.detectedDeviceModelCode
+                    ?? ""
+            ),
+            URLQueryItem(name: "firmware", value: viewModel.importedFirmwareSourceName ?? "")
+        ]
+
+        if let url = components.url {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     private func handleFirmwareDrop(_ providers: [NSItemProvider], viewModel: FlashViewModel) -> Bool {

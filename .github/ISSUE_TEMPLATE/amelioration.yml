@@ -1,0 +1,17 @@
+name: 💡 Proposition d'amélioration
+description: Suggérer une fonctionnalité ou une amélioration pour FlashPort
+title: "[Idée] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: idee
+    attributes:
+      label: Votre idée
+      description: Décrivez la fonctionnalité souhaitée et le besoin qu'elle couvre.
+    validations:
+      required: true
+  - type: textarea
+    id: contexte
+    attributes:
+      label: Contexte (optionnel)
+      description: Modèle de téléphone concerné, cas d'usage, alternatives essayées…

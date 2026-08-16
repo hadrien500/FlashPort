@@ -794,6 +794,7 @@ enum FirmwareBundleImportError: Error, LocalizedError {
     case unsupportedSource(String)
     case extractionFailed(String)
     case noArchivesFound(String)
+    case insufficientDiskSpace(requiredBytes: Int64, availableBytes: Int64)
 
     var errorDescription: String? {
         switch self {
@@ -803,6 +804,10 @@ enum FirmwareBundleImportError: Error, LocalizedError {
             return "Extraction du ZIP impossible : \(reason)"
         case .noArchivesFound(let name):
             return "\(name) : aucun fichier BL/AP/CP/CSC/HOME_CSC .tar.md5 trouvé."
+        case .insufficientDiskSpace(let requiredBytes, let availableBytes):
+            let required = ByteCountFormatter.string(fromByteCount: requiredBytes, countStyle: .file)
+            let available = ByteCountFormatter.string(fromByteCount: availableBytes, countStyle: .file)
+            return "Espace disque insuffisant pour extraire le firmware : environ \(required) nécessaires, \(available) disponibles. Libère de l'espace puis réessaie."
         }
     }
 }
@@ -856,6 +861,17 @@ enum FirmwareBundleImporter {
                 FirmwareImportProgress(message: "Recherche des archives", progress: 0.18)
             )
         } else if sourceURL.pathExtension.lowercased() == "zip" {
+            // L'extraction copie le ZIP puis le décompresse dans le dossier
+            // temporaire : il faut environ deux fois sa taille, plus une marge.
+            let requiredBytes = Int64(clamping: fileSize(of: sourceURL)) * 2 + 1_000_000_000
+            if let availableBytes = availableDiskSpace(at: FileManager.default.temporaryDirectory),
+               availableBytes < requiredBytes {
+                throw FirmwareBundleImportError.insufficientDiskSpace(
+                    requiredBytes: requiredBytes,
+                    availableBytes: availableBytes
+                )
+            }
+
             let extractionDirectory = FileManager.default.temporaryDirectory
                 .appendingPathComponent("AndroidFLASH-Firmware-\(UUID().uuidString)", isDirectory: true)
             do {
@@ -1045,6 +1061,11 @@ enum FirmwareBundleImporter {
     private static func fileSize(of url: URL) -> UInt64 {
         let size = (try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0
         return UInt64(max(size, 0))
+    }
+
+    private static func availableDiskSpace(at url: URL) -> Int64? {
+        let values = try? url.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey])
+        return values?.volumeAvailableCapacityForImportantUsage
     }
 
     private static func extractedRegularFileSize(in directoryURL: URL, excluding excludedURL: URL) -> UInt64 {

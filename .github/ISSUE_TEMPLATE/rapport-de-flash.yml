@@ -1,0 +1,44 @@
+name: 🐞 Rapport de problème
+description: Signaler un problème rencontré avec FlashPort
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description du problème
+      description: Ce qui s'est passé, et ce à quoi vous vous attendiez.
+      placeholder: "ex. Le flash s'arrête à 45 % sur la partition super…"
+    validations:
+      required: true
+  - type: input
+    id: telephone
+    attributes:
+      label: Téléphone
+      placeholder: "ex. Samsung Galaxy A13 (SM-A137F)"
+    validations:
+      required: true
+  - type: input
+    id: firmware
+    attributes:
+      label: Firmware utilisé
+      placeholder: "ex. SAMFW.COM_SM-A137F_BOG_A137FXXSCEZB1_fac.zip"
+  - type: input
+    id: version
+    attributes:
+      label: Version de FlashPort
+      description: Visible dans le panneau ⓘ de l'app.
+      placeholder: "ex. 1.0.0 (260817)"
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: Version de macOS et type de Mac
+      placeholder: "ex. macOS 15.6, MacBook Air M2 / iMac Intel 2020"
+  - type: textarea
+    id: journal
+    attributes:
+      label: Journal
+      description: Dans FlashPort, ouvrez Paramètres avancés → Journal → « Copier », puis collez ici.
+      render: text
