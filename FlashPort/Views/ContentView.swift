@@ -46,6 +46,11 @@ struct ContentView: View {
                 Spacer(minLength: 22)
 
                 VStack(spacing: 12) {
+                    if let flashFailureReason = viewModel.flashFailureReason {
+                        flashFailureBanner(flashFailureReason)
+                            .frame(maxWidth: 900)
+                    }
+
                     if let customRecoveryBootNoticeText = viewModel.customRecoveryBootNoticeText {
                         customRecoveryBootNotice(customRecoveryBootNoticeText)
                             .frame(maxWidth: 900)
@@ -631,6 +636,38 @@ struct ContentView: View {
             .frame(height: 4)
         }
         .frame(height: 25)
+    }
+
+    private func flashFailureBanner(_ reason: String) -> some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: "xmark.octagon.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(Color(red: 1.0, green: 0.36, blue: 0.36))
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Flash échoué")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(.white)
+
+                Text(reason)
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.78))
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(Color(red: 1.0, green: 0.28, blue: 0.28).opacity(0.12))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(Color(red: 1.0, green: 0.36, blue: 0.36).opacity(0.45), lineWidth: 1)
+        )
     }
 
     private func heimdallInstallWarning(_ message: String) -> some View {
@@ -2155,8 +2192,8 @@ struct ContentView: View {
             return "Finalisation"
         case .completed:
             return completedOperationText(viewModel: viewModel)
-        case .failed:
-            return "Flash interrompu"
+        case .failed(let reason):
+            return reason
         }
     }
 

@@ -324,6 +324,14 @@ final class FlashViewModel {
         !pitEntries.isEmpty
     }
 
+    /// Raison exacte du dernier échec (message affiché à l'utilisateur).
+    var flashFailureReason: String? {
+        if case .failed(let reason) = state {
+            return reason
+        }
+        return nil
+    }
+
     var normalizedExpectedDeviceModelCode: String? {
         FirmwareCompatibilityValidator.normalizedDeviceModelCode(expectedDeviceModelCode)
     }

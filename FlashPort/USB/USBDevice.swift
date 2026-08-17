@@ -545,8 +545,25 @@ final class USBDevice {
     }
 
     private static func describeIOReturn(_ status: IOReturn) -> String {
-        String(format: "0x%08X", UInt32(bitPattern: status))
+        let code = String(format: "0x%08X", UInt32(bitPattern: status))
+        guard let label = ioReturnLabels[status] else {
+            return code
+        }
+        return "\(code) — \(label)"
     }
+
+    /// Traduction des codes IOReturn les plus courants lors d'un flash USB.
+    private static let ioReturnLabels: [IOReturn: String] = [
+        kIOReturnNotResponding: "le téléphone ne répond plus (session Download expirée ou câble déconnecté)",
+        kIOReturnTimeout: "délai d'attente dépassé (le téléphone n'a pas répondu à temps)",
+        kIOReturnAborted: "transfert interrompu",
+        kIOReturnNoDevice: "téléphone USB introuvable (déconnecté)",
+        kIOReturnNotOpen: "interface USB fermée",
+        kIOReturnExclusiveAccess: "interface USB déjà utilisée par un autre logiciel (Odin, Kies, Smart Switch ?)",
+        kIOReturnNotAttached: "téléphone détaché du bus USB",
+        kIOReturnOverrun: "trop de données reçues du téléphone",
+        kIOReturnUnderrun: "transfert incomplet"
+    ]
 
     private static func shortErrorDescription(_ error: Error) -> String {
         if let localizedError = error as? LocalizedError, let description = localizedError.errorDescription {
