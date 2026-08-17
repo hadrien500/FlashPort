@@ -546,23 +546,43 @@ final class USBDevice {
 
     private static func describeIOReturn(_ status: IOReturn) -> String {
         let code = String(format: "0x%08X", UInt32(bitPattern: status))
-        guard let label = ioReturnLabels[status] else {
-            return code
-        }
+        let label = ioReturnLabels[status] ?? "erreur USB inattendue — débranche puis rebranche le câble, remets le téléphone en Download Mode et réessaie"
         return "\(code) — \(label)"
     }
 
-    /// Traduction des codes IOReturn les plus courants lors d'un flash USB.
+    /// Traduction en langage clair des codes IOReturn rencontrés lors d'un
+    /// flash USB, pour un utilisateur non technique.
     private static let ioReturnLabels: [IOReturn: String] = [
-        kIOReturnNotResponding: "le téléphone ne répond plus (session Download expirée ou câble déconnecté)",
-        kIOReturnTimeout: "délai d'attente dépassé (le téléphone n'a pas répondu à temps)",
-        kIOReturnAborted: "transfert interrompu",
+        kIOReturnSuccess: "succès",
+        kIOReturnError: "erreur USB générale",
+        kIOReturnNoMemory: "mémoire insuffisante sur le Mac",
+        kIOReturnNoResources: "ressources système insuffisantes",
         kIOReturnNoDevice: "téléphone USB introuvable (déconnecté)",
-        kIOReturnNotOpen: "interface USB fermée",
+        kIOReturnNotPrivileged: "autorisation refusée par macOS pour accéder au périphérique USB",
+        kIOReturnBadArgument: "paramètre USB invalide (erreur interne)",
         kIOReturnExclusiveAccess: "interface USB déjà utilisée par un autre logiciel (Odin, Kies, Smart Switch ?)",
+        kIOReturnUnsupported: "opération USB non supportée par ce Mac ou ce câble",
+        kIOReturnInternalError: "erreur interne du contrôleur USB",
+        kIOReturnIOError: "erreur d'entrée/sortie USB (câble ou port défaillant ?)",
+        kIOReturnCannotLock: "impossible de verrouiller le périphérique USB",
+        kIOReturnNotOpen: "interface USB fermée",
+        kIOReturnNotReadable: "lecture USB impossible",
+        kIOReturnNotWritable: "écriture USB impossible",
+        kIOReturnBusy: "périphérique USB occupé",
+        kIOReturnTimeout: "délai d'attente dépassé (le téléphone n'a pas répondu à temps — session Download expirée ?)",
+        kIOReturnOffline: "téléphone hors ligne",
+        kIOReturnNotReady: "téléphone pas prêt",
         kIOReturnNotAttached: "téléphone détaché du bus USB",
+        kIOReturnNoBandwidth: "bande passante USB insuffisante (essaie un port direct, sans hub)",
+        kIOReturnNoPower: "alimentation USB insuffisante (essaie un autre port ou câble)",
+        kIOReturnMessageTooLarge: "message USB trop grand",
+        kIOReturnNotPermitted: "opération USB non autorisée",
+        kIOReturnUnderrun: "transfert USB incomplet (données manquantes)",
         kIOReturnOverrun: "trop de données reçues du téléphone",
-        kIOReturnUnderrun: "transfert incomplet"
+        kIOReturnDeviceError: "erreur signalée par le téléphone",
+        kIOReturnAborted: "transfert interrompu (débranchement ou annulation)",
+        kIOReturnNotResponding: "le téléphone ne répond plus (session Download expirée ou câble déconnecté)",
+        kIOReturnNotFound: "ressource USB introuvable"
     ]
 
     private static func shortErrorDescription(_ error: Error) -> String {
