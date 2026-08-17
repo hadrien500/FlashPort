@@ -3,12 +3,19 @@
 Toutes les évolutions notables de FlashPort sont documentées ici.
 Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le projet suit [SemVer](https://semver.org/lang/fr/).
 
-## [Non publié] — prochaine bêta 4
+## [1.0.0-beta.4] — 2026-08-17
 
 ### Ajouté
 - Flash direct d'un recovery personnalisé (TWRP) : bouton « Flasher un recovery… » dans les paramètres avancés, qui accepte un ou plusieurs fichiers (recovery + vbmeta patché) ou un dossier complet, en .img, .img.lz4, .tar ou .tar.md5. Chaque image est mappée automatiquement sur sa partition (recovery, vbmeta…), limite 256 Mo par image, redémarrage automatique désactivé.
 - Détection du refus de binaire par le bootloader : la valeur de réponse de fin de séquence est désormais vérifiée (comme Odin/Heimdall) ; si le téléphone rejette une image (ex. TWRP non signé sur bootloader verrouillé), le flash échoue explicitement avec le code d'erreur et la marche à suivre, au lieu d'annoncer un faux succès.
 - Avertissement préventif avant un flash de recovery custom : rappel que le bootloader doit être déverrouillé (Déverrouillage OEM), sans quoi le flash échouera.
+- Bouton « Réinitialiser » (barre du haut et bannière d'erreur) pour repartir sur une page vierge et enchaîner un nouveau flash.
+- Traduction en langage clair de tous les codes d'erreur USB (IOReturn), avec un repli lisible pour les codes inconnus.
+- Bannière d'erreur dédiée : message humain, détail technique repliable, boutons Copier et Réinitialiser.
+
+### Modifié
+- État d'échec du flash affiché en rouge (« Échec ») au lieu de l'orange « À vérifier ».
+- Anneaux d'étapes cohérents : le firmware importé passe au vert « Valide », et une étape « prête » n'affiche plus d'arc partiel trompeur.
 
 ### Corrigé
 - Refus du bootloader (réponse 0xFFFFFFFF) désormais signalé immédiatement comme un échec clair, au lieu d'attendre plusieurs minutes le délai de fin de session : la fermeture de session utilise un délai court quand le flash sort sur une erreur.

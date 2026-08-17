@@ -48,7 +48,7 @@ struct ReleaseVersion: Comparable, Equatable {
 @Observable
 final class UpdateChecker {
     /// Tag de la version distribuée : à incrémenter à chaque release GitHub.
-    static let currentReleaseTag = "v1.0.0-beta.3"
+    static let currentReleaseTag = "v1.0.0-beta.4"
 
     private static let releasesURL = URL(
         string: "https://api.github.com/repos/hadrien500/FlashPort/releases?per_page=10"

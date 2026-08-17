@@ -57,6 +57,15 @@ Flasher un firmware peut endommager définitivement un téléphone si le firmwar
 5. Flashez. Le PIT est lu automatiquement quand nécessaire ; les images de plus de 4 Go (`super`) passent par le moteur Swift natif.
 6. Le premier démarrage après un flash peut prendre plusieurs minutes.
 
+## Flasher un recovery personnalisé (TWRP)
+
+Paramètres avancés → **Recovery personnalisé (TWRP)** → **Flasher un recovery…**. Sélectionnez un ou plusieurs fichiers (`recovery.img`/`.tar` et le `vbmeta` patché) ou le dossier qui les contient : chaque image est mappée automatiquement sur sa partition.
+
+⚠️ **Prérequis indispensables :**
+- **Bootloader déverrouillé** : activez « Déverrouillage OEM » dans les Options de développement, puis déverrouillez le bootloader en Download Mode (appui long sur Volume Haut — **efface toutes les données**). Sans cela, le téléphone refuse le binaire non officiel et FlashPort signale l'échec.
+- **Chipset et modèle exacts** : un TWRP prévu pour un autre chipset (ex. Exynos au lieu de MediaTek) ne fonctionnera pas. Vérifiez que la build correspond précisément à votre modèle.
+- Après le flash, **ne laissez pas Android démarrer** : quittez Download puis maintenez immédiatement **Volume Haut + Power** jusqu'à l'écran TWRP.
+
 ## Backends et limites connues
 
 | Backend | Notes |
