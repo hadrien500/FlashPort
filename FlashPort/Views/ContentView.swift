@@ -1978,7 +1978,10 @@ struct ContentView: View {
         case .active:
             return nil
         case .ready:
-            return 0.18
+            // Pas d'arc partiel : une étape « prête » n'est pas « à 18 % ».
+            // L'anneau reste vide (seul le numéro s'affiche), l'accent de
+            // couleur vient de la teinte du contour et du badge.
+            return nil
         case .complete:
             return 1
         case .warning:
