@@ -142,6 +142,19 @@ struct ContentView: View {
             }
 
             Button {
+                viewModel.resetForNewFlash()
+            } label: {
+                Image(systemName: "arrow.counterclockwise.circle")
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundStyle(.white.opacity(viewModel.canResetSession ? 0.88 : 0.3))
+                    .frame(width: 42, height: 42)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .disabled(!viewModel.canResetSession)
+            .help("Réinitialiser pour un nouveau flash")
+
+            Button {
                 showsAppInfo = true
             } label: {
                 Image(systemName: "info.circle")
@@ -399,6 +412,10 @@ struct ContentView: View {
         case .warning:
             Text("!")
                 .font(.system(size: 20, weight: .bold, design: .rounded))
+                .foregroundStyle(color)
+        case .error:
+            Image(systemName: "xmark")
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(color)
         case .ready, .pending:
             Text(String(format: "%02d", number))
@@ -1917,7 +1934,7 @@ struct ContentView: View {
             return .complete
         }
         if case .failed = viewModel.state {
-            return .warning
+            return .error
         }
         if canFlashFromMain(viewModel: viewModel) {
             return .ready
@@ -1966,6 +1983,8 @@ struct ContentView: View {
             return 1
         case .warning:
             return 1
+        case .error:
+            return 1
         }
     }
 
@@ -1975,6 +1994,8 @@ struct ContentView: View {
             return isReady ? tone.accent.opacity(0.42) : .white.opacity(0.20)
         case .warning:
             return .orange
+        case .error:
+            return Color(red: 1.0, green: 0.30, blue: 0.30)
         case .active:
             return activeStepColor
         case .ready:
@@ -1996,6 +2017,8 @@ struct ContentView: View {
             return completedStepColor
         case .warning:
             return .orange
+        case .error:
+            return Color(red: 1.0, green: 0.30, blue: 0.30)
         }
     }
 
@@ -2011,6 +2034,8 @@ struct ContentView: View {
             return completedStepColor
         case .warning:
             return .orange
+        case .error:
+            return Color(red: 1.0, green: 0.30, blue: 0.30)
         }
     }
 
@@ -2440,6 +2465,7 @@ private enum WorkflowStepStatus {
     case ready
     case complete
     case warning
+    case error
 
     var title: String {
         switch self {
@@ -2453,6 +2479,8 @@ private enum WorkflowStepStatus {
             return "Valide"
         case .warning:
             return "À vérifier"
+        case .error:
+            return "Échec"
         }
     }
 
@@ -2468,6 +2496,8 @@ private enum WorkflowStepStatus {
             return "checkmark.circle.fill"
         case .warning:
             return "exclamationmark.triangle.fill"
+        case .error:
+            return "xmark.circle.fill"
         }
     }
 

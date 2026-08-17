@@ -582,6 +582,43 @@ final class FlashViewModel {
         appendLog("Firmware retire : selectionne un nouveau ZIP ou dossier.")
     }
 
+    /// Remet l'application dans son état d'accueil pour enchaîner un nouveau
+    /// flash : firmware retiré, sélection vidée, journal effacé, session Odin
+    /// éventuelle fermée. La détection automatique du téléphone continue.
+    var canResetSession: Bool {
+        if isBusy { return false }
+        return importedFirmwareSourceName != nil
+            || !availableFirmwareArchives.isEmpty
+            || !firmwareArchives.isEmpty
+            || !logLines.isEmpty
+            || completedOperation != nil
+            || hasReusableOdinSession
+            || {
+                if case .idle = state { return false }
+                return true
+            }()
+    }
+
+    func resetForNewFlash() {
+        guard !isBusy else {
+            appendLog("Réinitialisation impossible : une opération est en cours.")
+            return
+        }
+
+        releaseReusableOdinSession()
+        clearFirmwareBundle()
+        pitEntries.removeAll()
+        jobs = StandardPartition.allCases.map { FlashJob(partitionName: $0.rawValue, fileURL: nil) }
+        state = .idle
+        completedOperation = nil
+        isReadingPitBeforeFlash = false
+        flashRemainingTimeText = nil
+        realFlashConfirmation = ""
+        lastPreparationReportSignature = nil
+        logLines.removeAll()
+        appendLog("Page réinitialisée : prêt pour un nouveau flash.")
+    }
+
     func setFirmwareDataMode(_ mode: FirmwareDataMode) {
         guard firmwareDataMode != mode else { return }
         resetCompletedOperation()
