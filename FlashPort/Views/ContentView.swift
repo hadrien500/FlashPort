@@ -47,8 +47,12 @@ struct ContentView: View {
 
                 VStack(spacing: 12) {
                     if let flashFailureReason = viewModel.flashFailureReason {
-                        flashFailureBanner(flashFailureReason)
-                            .frame(maxWidth: 900)
+                        flashFailureBanner(
+                            reason: flashFailureReason,
+                            advice: viewModel.flashFailureAdvice,
+                            viewModel: viewModel
+                        )
+                        .frame(maxWidth: 900)
                     }
 
                     if let customRecoveryBootNoticeText = viewModel.customRecoveryBootNoticeText {
@@ -638,36 +642,90 @@ struct ContentView: View {
         .frame(height: 25)
     }
 
-    private func flashFailureBanner(_ reason: String) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: "xmark.octagon.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(Color(red: 1.0, green: 0.36, blue: 0.36))
+    private func flashFailureBanner(reason: String, advice: String?, viewModel: FlashViewModel) -> some View {
+        let accent = Color(red: 1.0, green: 0.36, blue: 0.36)
+        let cleanedAdvice = advice.map { $0.replacingOccurrences(of: "Diagnostic : ", with: "") }
 
-            VStack(alignment: .leading, spacing: 3) {
-                Text("Flash échoué")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+        return HStack(alignment: .top, spacing: 0) {
+            Rectangle()
+                .fill(accent)
+                .frame(width: 4)
 
-                Text(reason)
-                    .font(.caption)
-                    .foregroundStyle(.white.opacity(0.78))
-                    .fixedSize(horizontal: false, vertical: true)
-                    .textSelection(.enabled)
+            HStack(alignment: .top, spacing: 12) {
+                Image(systemName: "xmark.octagon.fill")
+                    .font(.system(size: 20, weight: .semibold))
+                    .foregroundStyle(accent)
+                    .padding(.top, 1)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
+                        Text("Flash échoué")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(.white)
+
+                        Spacer(minLength: 0)
+
+                        Button {
+                            copyFailureReport(reason: reason, advice: advice)
+                        } label: {
+                            Label("Copier", systemImage: "doc.on.doc")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.white.opacity(0.7))
+
+                        Button {
+                            viewModel.resetForNewFlash()
+                        } label: {
+                            Label("Réinitialiser", systemImage: "arrow.counterclockwise")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(accent)
+                    }
+
+                    Text(reason)
+                        .font(.caption)
+                        .foregroundStyle(.white.opacity(0.82))
+                        .fixedSize(horizontal: false, vertical: true)
+                        .textSelection(.enabled)
+
+                    if let cleanedAdvice {
+                        HStack(alignment: .top, spacing: 6) {
+                            Image(systemName: "lightbulb.fill")
+                                .font(.system(size: 11))
+                                .foregroundStyle(Color(red: 1.0, green: 0.80, blue: 0.35))
+                                .padding(.top, 1)
+
+                            Text(cleanedAdvice)
+                                .font(.caption)
+                                .foregroundStyle(.white.opacity(0.66))
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
             }
-
-            Spacer(minLength: 0)
+            .padding(12)
         }
-        .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color(red: 1.0, green: 0.28, blue: 0.28).opacity(0.12))
+                .fill(Color(red: 0.20, green: 0.06, blue: 0.07).opacity(0.55))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10)
-                .stroke(Color(red: 1.0, green: 0.36, blue: 0.36).opacity(0.45), lineWidth: 1)
+                .stroke(accent.opacity(0.45), lineWidth: 1)
         )
+        .clipShape(RoundedRectangle(cornerRadius: 10))
+    }
+
+    private func copyFailureReport(reason: String, advice: String?) {
+        var text = "FlashPort — échec de flash\n\(reason)"
+        if let advice {
+            text += "\n\(advice)"
+        }
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(text, forType: .string)
     }
 
     private func heimdallInstallWarning(_ message: String) -> some View {
@@ -2192,8 +2250,8 @@ struct ContentView: View {
             return "Finalisation"
         case .completed:
             return completedOperationText(viewModel: viewModel)
-        case .failed(let reason):
-            return reason
+        case .failed:
+            return "Flash interrompu"
         }
     }
 

@@ -332,6 +332,12 @@ final class FlashViewModel {
         return nil
     }
 
+    /// Conseil d'action adapté au dernier échec.
+    var flashFailureAdvice: String? {
+        guard let reason = flashFailureReason else { return nil }
+        return userFacingFlashFailureSummary(for: reason)
+    }
+
     var normalizedExpectedDeviceModelCode: String? {
         FirmwareCompatibilityValidator.normalizedDeviceModelCode(expectedDeviceModelCode)
     }
