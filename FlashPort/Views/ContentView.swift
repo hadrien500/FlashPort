@@ -1891,11 +1891,11 @@ struct ContentView: View {
         if !viewModel.firmwareErrors.isEmpty {
             return .warning
         }
-        if !viewModel.selectedFirmwareMappings.isEmpty {
+        // Un firmware importé et sans erreur est « prêt » : le mapping des
+        // images sur les partitions se fait au moment du flash (lecture PIT
+        // automatique en mode natif), donc on ne dépend pas de la sélection.
+        if !viewModel.firmwareArchives.isEmpty || viewModel.importedFirmwareSourceName != nil {
             return .complete
-        }
-        if !viewModel.firmwareArchives.isEmpty {
-            return .ready
         }
         return .pending
     }
