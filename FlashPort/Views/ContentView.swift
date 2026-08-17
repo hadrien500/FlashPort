@@ -643,80 +643,84 @@ struct ContentView: View {
     }
 
     private func flashFailureBanner(reason: String, advice: String?, viewModel: FlashViewModel) -> some View {
-        let accent = Color(red: 1.0, green: 0.36, blue: 0.36)
-        let cleanedAdvice = advice.map { $0.replacingOccurrences(of: "Diagnostic : ", with: "") }
+        let accent = Color(red: 1.0, green: 0.42, blue: 0.42)
+        // Message principal lisible : le conseil sans son préfixe technique.
+        let headline = advice
+            .map { $0.replacingOccurrences(of: "Diagnostic : ", with: "") }
+            ?? "Le flash n'a pas pu se terminer."
 
-        return HStack(alignment: .top, spacing: 0) {
-            Rectangle()
-                .fill(accent)
-                .frame(width: 4)
-
-            HStack(alignment: .top, spacing: 12) {
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
                 Image(systemName: "xmark.octagon.fill")
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundStyle(accent)
-                    .padding(.top, 1)
 
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Text("Flash échoué")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(.white)
+                Text("Flash échoué")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
 
-                        Spacer(minLength: 0)
-
-                        Button {
-                            copyFailureReport(reason: reason, advice: advice)
-                        } label: {
-                            Label("Copier", systemImage: "doc.on.doc")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(.white.opacity(0.7))
-
-                        Button {
-                            viewModel.resetForNewFlash()
-                        } label: {
-                            Label("Réinitialiser", systemImage: "arrow.counterclockwise")
-                                .font(.system(size: 11, weight: .semibold))
-                        }
-                        .buttonStyle(.plain)
-                        .foregroundStyle(accent)
-                    }
-
-                    Text(reason)
-                        .font(.caption)
-                        .foregroundStyle(.white.opacity(0.82))
-                        .fixedSize(horizontal: false, vertical: true)
-                        .textSelection(.enabled)
-
-                    if let cleanedAdvice {
-                        HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "lightbulb.fill")
-                                .font(.system(size: 11))
-                                .foregroundStyle(Color(red: 1.0, green: 0.80, blue: 0.35))
-                                .padding(.top, 1)
-
-                            Text(cleanedAdvice)
-                                .font(.caption)
-                                .foregroundStyle(.white.opacity(0.66))
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                    }
-                }
+                Spacer(minLength: 0)
             }
-            .padding(12)
+
+            Text(headline)
+                .font(.system(size: 13))
+                .foregroundStyle(.white.opacity(0.88))
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+
+            DisclosureGroup {
+                Text(reason)
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(.white.opacity(0.55))
+                    .lineSpacing(2)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .textSelection(.enabled)
+                    .padding(.top, 4)
+            } label: {
+                Text("Détail technique")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.5))
+            }
+            .tint(.white.opacity(0.5))
+
+            HStack(spacing: 10) {
+                Spacer(minLength: 0)
+
+                Button {
+                    copyFailureReport(reason: reason, advice: advice)
+                } label: {
+                    Label("Copier le détail", systemImage: "doc.on.doc")
+                        .font(.system(size: 12, weight: .semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white.opacity(0.85))
+                .background(Capsule().fill(Color.white.opacity(0.10)))
+
+                Button {
+                    viewModel.resetForNewFlash()
+                } label: {
+                    Label("Réinitialiser", systemImage: "arrow.counterclockwise")
+                        .font(.system(size: 12, weight: .semibold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(.white)
+                .background(Capsule().fill(accent.opacity(0.85)))
+            }
         }
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(red: 0.20, green: 0.06, blue: 0.07).opacity(0.55))
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(red: 0.16, green: 0.07, blue: 0.08))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 10)
-                .stroke(accent.opacity(0.45), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(accent.opacity(0.35), lineWidth: 1)
         )
-        .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     private func copyFailureReport(reason: String, advice: String?) {
