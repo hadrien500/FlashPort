@@ -39,6 +39,7 @@ enum OdinProtocol {
     // avant de confirmer la dernière séquence et la fin de session.
     static let finalSequenceTimeout: TimeInterval = 300
     static let endSessionTimeout: TimeInterval = 300
+    static let cleanupEndSessionTimeout: TimeInterval = 5
     static let requestedProtocolVersion: UInt32 = 4
     static let compressedTransferSupportFlag: UInt32 = 0x8000
 

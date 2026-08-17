@@ -245,7 +245,10 @@ final class FlashSession {
         var shouldEndSessionOnExit = true
         defer {
             if shouldEndSessionOnExit {
-                try? endSession(reboot: false)
+                // Sortie sur erreur : le téléphone peut être en état de refus et
+                // ne jamais acquitter la fin de session. Timeout court pour ne
+                // pas figer l'app plusieurs minutes avant d'afficher l'échec.
+                try? endSession(reboot: false, timeout: OdinProtocol.cleanupEndSessionTimeout)
             }
         }
 
@@ -747,7 +750,7 @@ final class FlashSession {
         }
     }
 
-    private func endSession(reboot: Bool = false) throws {
+    private func endSession(reboot: Bool = false, timeout: TimeInterval = OdinProtocol.endSessionTimeout) throws {
         let packet = SessionCommandPacket(
             controlType: OdinProtocol.ControlType.endSession.rawValue,
             request: OdinProtocol.EndSessionRequest.end.rawValue,
@@ -757,7 +760,7 @@ final class FlashSession {
         _ = try receiveResponse(
             expectedType: .endSession,
             context: "Fin de session Odin",
-            timeout: OdinProtocol.endSessionTimeout
+            timeout: timeout
         )
 
         if reboot {
@@ -893,6 +896,7 @@ final class FlashSession {
                 reason: localizedReason(for: error)
             )
         }
+
         guard response.count >= OdinProtocol.responsePacketSize else {
             throw OdinProtocolError.responseTooShort(
                 context: context,
@@ -903,6 +907,14 @@ final class FlashSession {
 
         let bytes = Array(response)
         let responseType = readUInt32(bytes, at: 0)
+
+        // 0xFFFFFFFF est le refus universel du bootloader Odin (NAK) : image
+        // non signée sur bootloader verrouillé, downgrade bloqué, ou binaire
+        // incompatible. Le signaler comme un vrai échec, pas un faux succès.
+        if responseType == UInt32.max {
+            throw OdinProtocolError.binaryRejected(context: context, code: readUInt32(bytes, at: 4))
+        }
+
         guard responseType == expectedResponseType else {
             throw OdinProtocolError.unexpectedResponseType(
                 context: context,

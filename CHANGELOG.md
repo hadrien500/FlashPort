@@ -10,6 +10,10 @@ Format inspiré de [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/) ; le
 - Détection du refus de binaire par le bootloader : la valeur de réponse de fin de séquence est désormais vérifiée (comme Odin/Heimdall) ; si le téléphone rejette une image (ex. TWRP non signé sur bootloader verrouillé), le flash échoue explicitement avec le code d'erreur et la marche à suivre, au lieu d'annoncer un faux succès.
 - Avertissement préventif avant un flash de recovery custom : rappel que le bootloader doit être déverrouillé (Déverrouillage OEM), sans quoi le flash échouera.
 
+### Corrigé
+- Refus du bootloader (réponse 0xFFFFFFFF) désormais signalé immédiatement comme un échec clair, au lieu d'attendre plusieurs minutes le délai de fin de session : la fermeture de session utilise un délai court quand le flash sort sur une erreur.
+- Nettoyage des fichiers temporaires plus prudent : ne supprime plus que les restes de plus d'une heure, pour ne jamais effacer un import/flash en cours.
+
 ## [1.0.0-beta.3] — 2026-08-16
 
 ### Ajouté

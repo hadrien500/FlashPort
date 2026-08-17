@@ -1741,16 +1741,24 @@ final class FlashViewModel {
         let temporaryDirectory = FileManager.default.temporaryDirectory
         guard let urls = try? FileManager.default.contentsOfDirectory(
             at: temporaryDirectory,
-            includingPropertiesForKeys: nil
+            includingPropertiesForKeys: [.contentModificationDateKey]
         ) else {
             return
         }
 
+        // Ne supprimer que les restes réellement anciens : un dossier récent
+        // peut être en cours d'utilisation par un import/flash en parallèle.
+        let staleThreshold = Date().addingTimeInterval(-3600)
+
         for url in urls {
             let name = url.lastPathComponent
             let isFirmwareImport = name.hasPrefix("AndroidFLASH-Firmware-")
+            let isRecoveryImport = name.hasPrefix("AndroidFLASH-Recovery-")
             let isPreparedPayload = name.hasPrefix("AndroidFLASH-") && !name.hasPrefix("AndroidFLASH-Heimdall")
-            guard isFirmwareImport || isPreparedPayload else { continue }
+            guard isFirmwareImport || isRecoveryImport || isPreparedPayload else { continue }
+
+            let modificationDate = (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+            guard let modificationDate, modificationDate < staleThreshold else { continue }
 
             try? FileManager.default.removeItem(at: url)
         }
